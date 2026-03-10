@@ -56,7 +56,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // ── ROUTES ───────────────────────────────────────────────────
-app.use('/api/auth',     require('./routes/auth'));
+app.use('/api/auth/login',     require('./routes/auth'));
 app.use('/api/profile',  require('./routes/profile'));
 app.use('/api/stats',    require('./routes/stats'));
 app.use('/api/meals',    require('./routes/meals'));

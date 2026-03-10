@@ -24,11 +24,25 @@ app.use('/api/auth/', rateLimit({
   message: { error: 'Too many attempts, try again later' }
 }));
 
-// ── MIDDLEWARE ────────────────────────────────────────────────
+// ── CORS FIX ──────────────────────────────────────────────────
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://fitand-rise.vercel.app"
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true,
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
 }));
+
+// ── MIDDLEWARE ────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -64,20 +78,6 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
   console.log(`\n🚀  BeFit server  →  http://localhost:${PORT}`);
   console.log(`📋  Routes ready:`);
-  console.log(`    POST   /api/auth/register`);
-  console.log(`    POST   /api/auth/login`);
-  console.log(`    GET    /api/profile`);
-  console.log(`    PUT    /api/profile`);
-  console.log(`    PUT    /api/profile/goals`);
-  console.log(`    GET    /api/stats`);
-  console.log(`    PUT    /api/stats`);
-  console.log(`    GET    /api/stats/weekly`);
-  console.log(`    GET    /api/meals`);
-  console.log(`    POST   /api/meals`);
-  console.log(`    DELETE /api/meals/:id`);
-  console.log(`    GET    /api/workouts`);
-  console.log(`    POST   /api/workouts/toggle`);
-  console.log(`    GET    /api/workouts/history\n`);
 
   try {
     await pool.query('SELECT 1');

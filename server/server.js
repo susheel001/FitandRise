@@ -10,36 +10,26 @@ const app = express();
 // ── SECURITY ──────────────────────────────────────────────────
 app.use(helmet());
 
-// Limit all API requests — 100 per 15 min
 app.use('/api/', rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: { error: 'Too many requests, slow down!' }
 }));
 
-// Stricter limit on auth — 10 per 15 min
 app.use('/api/auth/', rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: { error: 'Too many attempts, try again later' }
 }));
 
-// ── CORS FIX ──────────────────────────────────────────────────
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://fitand-rise.vercel.app"
-];
-
+// ── CORS — allow frontend ─────────────────────────────────────
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      return callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true
+  origin: [
+    process.env.CLIENT_URL,
+    'https://fitand-rise.vercel.app',
+    'http://localhost:5173',
+  ],
+  credentials: true,
 }));
 
 // ── MIDDLEWARE ────────────────────────────────────────────────
@@ -47,16 +37,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ── HEALTH CHECK ─────────────────────────────────────────────
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    message: 'BeFit API is running',
-    timestamp: new Date(),
-  });
-});
+app.use(cors({
+  origin: [
+    'https://fitand-rise.vercel.app',
+    'http://localhost:5173',
+  ],
+  credentials: true,
+}));
 
 // ── ROUTES ───────────────────────────────────────────────────
-app.use('/api/auth/login',     require('./routes/auth'));
+app.use('/api/auth',     require('./routes/auth'));
 app.use('/api/profile',  require('./routes/profile'));
 app.use('/api/stats',    require('./routes/stats'));
 app.use('/api/meals',    require('./routes/meals'));
@@ -76,8 +66,22 @@ app.use((err, req, res, next) => {
 // ── START ────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
-  console.log(`\n🚀  BeFit server  →  http://localhost:${PORT}`);
+  console.log(`\n🚀  FitAndRise server  →  http://localhost:${PORT}`);
   console.log(`📋  Routes ready:`);
+  console.log(`    POST   /api/auth/register`);
+  console.log(`    POST   /api/auth/login`);
+  console.log(`    GET    /api/profile`);
+  console.log(`    PUT    /api/profile`);
+  console.log(`    PUT    /api/profile/goals`);
+  console.log(`    GET    /api/stats`);
+  console.log(`    PUT    /api/stats`);
+  console.log(`    GET    /api/stats/weekly`);
+  console.log(`    GET    /api/meals`);
+  console.log(`    POST   /api/meals`);
+  console.log(`    DELETE /api/meals/:id`);
+  console.log(`    GET    /api/workouts`);
+  console.log(`    POST   /api/workouts/toggle`);
+  console.log(`    GET    /api/workouts/history\n`);
 
   try {
     await pool.query('SELECT 1');

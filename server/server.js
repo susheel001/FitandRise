@@ -7,22 +7,32 @@ const pool      = require('./db');
 
 const app = express();
 
+// ── CORS ───────────────────────────────────────────────────────
+// allow localhost for dev, and future deployed frontend URLs
+const allowedOrigins = [
+  'http://localhost:5173',
+  // 'https://fitand-rise.vercel.app',   // add after frontend deploy
+];
+
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://fitand-rise.vercel.app',
-    'https://fitand-rise-oxyqguspo-susheel001s-projects.vercel.app',
-  ],
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 
+// handle preflight requests
 app.options('*', cors());
+
+// ── SECURITY & MIDDLEWARE ─────────────────────────────────────
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ── RATE LIMITING ─────────────────────────────────────────────
 app.use('/api/', rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,
   message: { error: 'Too many requests!' }
 }));
@@ -33,25 +43,30 @@ app.use('/api/auth/', rateLimit({
   message: { error: 'Too many attempts!' }
 }));
 
+// ── HEALTH CHECK ─────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'FitAndRise API is running' });
 });
 
+// ── ROUTES ───────────────────────────────────────────────────
 app.use('/api/auth',     require('./routes/auth'));
 app.use('/api/profile',  require('./routes/profile'));
 app.use('/api/stats',    require('./routes/stats'));
 app.use('/api/meals',    require('./routes/meals'));
 app.use('/api/workouts', require('./routes/workouts'));
 
+// ── 404 HANDLER ──────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ error: `${req.method} ${req.url} not found` });
 });
 
+// ── ERROR HANDLER ────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);
   res.status(500).json({ error: 'Internal server error' });
 });
 
+// ── START SERVER ─────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
   console.log(`\n🚀 FitAndRise running on port ${PORT}`);

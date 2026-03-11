@@ -40,6 +40,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors({
   origin: [
     'https://fitand-rise.vercel.app',
+    'https://fitand-rise-oxyqguspo-susheel001s-projects.vercel.app',
     'http://localhost:5173',
   ],
   credentials: true,

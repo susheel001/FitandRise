@@ -7,6 +7,23 @@ const pool      = require('./db');
 
 const app = express();
 
+// ── CORS ──────────────────────────────────────────────────────
+app.use(cors({
+  origin: function(origin, callback) {
+    const allowed = [
+      'http://localhost:5173',
+      'https://fitand-rise.vercel.app',
+      'https://fitand-rise-oxyqguspo-susheel001s-projects.vercel.app',
+    ];
+    if (!origin || allowed.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
+
 // ── SECURITY ──────────────────────────────────────────────────
 app.use(helmet());
 
@@ -22,29 +39,14 @@ app.use('/api/auth/', rateLimit({
   message: { error: 'Too many attempts, try again later' }
 }));
 
-// ── CORS — allow frontend ─────────────────────────────────────
-app.use(cors({
-  origin: [
-    process.env.CLIENT_URL,
-    'https://fitand-rise.vercel.app',
-    'http://localhost:5173',
-  ],
-  credentials: true,
-}));
-
 // ── MIDDLEWARE ────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ── HEALTH CHECK ─────────────────────────────────────────────
-app.use(cors({
-  origin: [
-    'https://fitand-rise.vercel.app',
-    'https://fitand-rise-oxyqguspo-susheel001s-projects.vercel.app',
-    'http://localhost:5173',
-  ],
-  credentials: true,
-}));
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'FitAndRise API is running', timestamp: new Date() });
+});
 
 // ── ROUTES ───────────────────────────────────────────────────
 app.use('/api/auth',     require('./routes/auth'));
@@ -58,37 +60,20 @@ app.use((req, res) => {
   res.status(404).json({ error: `${req.method} ${req.url} not found` });
 });
 
-// ── GLOBAL ERROR HANDLER ──────────────────────────────────────
+// ── ERROR HANDLER ─────────────────────────────────────────────
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err.message);
+  console.error('Error:', err.message);
   res.status(500).json({ error: 'Internal server error' });
 });
 
 // ── START ────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
-  console.log(`\n🚀  FitAndRise server  →  http://localhost:${PORT}`);
-  console.log(`📋  Routes ready:`);
-  console.log(`    POST   /api/auth/register`);
-  console.log(`    POST   /api/auth/login`);
-  console.log(`    GET    /api/profile`);
-  console.log(`    PUT    /api/profile`);
-  console.log(`    PUT    /api/profile/goals`);
-  console.log(`    GET    /api/stats`);
-  console.log(`    PUT    /api/stats`);
-  console.log(`    GET    /api/stats/weekly`);
-  console.log(`    GET    /api/meals`);
-  console.log(`    POST   /api/meals`);
-  console.log(`    DELETE /api/meals/:id`);
-  console.log(`    GET    /api/workouts`);
-  console.log(`    POST   /api/workouts/toggle`);
-  console.log(`    GET    /api/workouts/history\n`);
-
+  console.log(`\n🚀  FitAndRise server  →  http://localhost:${PORT}\n`);
   try {
     await pool.query('SELECT 1');
     console.log('✅  Database connected\n');
   } catch (err) {
     console.error('❌  Database connection failed:', err.message);
-    console.error('    → Check your DATABASE_URL in .env\n');
   }
 });

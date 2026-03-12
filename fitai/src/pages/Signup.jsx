@@ -2,22 +2,83 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../api/api';
 
+// ── PASSWORD STRENGTH LOGIC ────────────────────────────────────
+function getStrength(pw) {
+  if (!pw) return { score: 0, label: '', color: '' };
+  let score = 0;
+  if (pw.length >= 8)  score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+  if (score <= 1) return { score, label: 'Weak',   color: '#ef4444', bg: 'bg-red-500' };
+  if (score <= 2) return { score, label: 'Fair',   color: '#f97316', bg: 'bg-orange-500' };
+  if (score <= 3) return { score, label: 'Good',   color: '#eab308', bg: 'bg-yellow-500' };
+  if (score <= 4) return { score, label: 'Strong', color: '#22c55e', bg: 'bg-green-500' };
+  return             { score, label: 'Very Strong', color: '#3b82f6', bg: 'bg-blue-500' };
+}
+
+function PasswordStrengthBar({ password }) {
+  const { score, label, color, bg } = getStrength(password);
+  if (!password) return null;
+
+  const checks = [
+    { text: 'At least 8 characters',       pass: password.length >= 8 },
+    { text: 'One uppercase letter (A-Z)',   pass: /[A-Z]/.test(password) },
+    { text: 'One number (0-9)',             pass: /[0-9]/.test(password) },
+    { text: 'One special character (!@#$)', pass: /[^A-Za-z0-9]/.test(password) },
+  ];
+
+  return (
+    <div className="mt-2 space-y-2">
+      {/* Bar */}
+      <div className="flex items-center gap-2">
+        <div className="flex-1 flex gap-1">
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${i <= score ? bg : 'bg-white/20'}`} />
+          ))}
+        </div>
+        <span className="text-xs font-bold" style={{ color }}>{label}</span>
+      </div>
+
+      {/* Checklist */}
+      <div className="grid grid-cols-2 gap-1">
+        {checks.map(c => (
+          <div key={c.text} className="flex items-center gap-1.5">
+            <span className={`text-xs ${c.pass ? 'text-green-400' : 'text-white/30'}`}>
+              {c.pass ? '✓' : '○'}
+            </span>
+            <span className={`text-xs ${c.pass ? 'text-white/70' : 'text-white/30'}`}>{c.text}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN SIGNUP COMPONENT ──────────────────────────────────────
 export default function Signup() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const { score } = getStrength(form.password);
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
     if (form.password !== form.confirm) return setError('Passwords do not match');
     if (form.password.length < 6) return setError('Password must be at least 6 characters');
+    if (score < 2) return setError('Please choose a stronger password');
     setLoading(true);
     try {
-      const data = await authAPI.register({ name: form.name, email: form.email, password: form.password });
-      localStorage.setItem('befit-auth', JSON.stringify({ token: data.token, ...data.user }));
-      navigate('/');
+      await authAPI.register({ name: form.name, email: form.email, password: form.password });
+      // Supabase may require email confirmation — redirect to login with message
+      navigate('/login', { state: { message: 'Account created! Please check your email to confirm.' } });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -25,20 +86,25 @@ export default function Signup() {
     }
   };
 
+  const passwordsMatch = form.confirm && form.password === form.confirm;
+  const passwordsMismatch = form.confirm && form.password !== form.confirm;
+
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0">
-        <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&auto=format&fit=crop&q=80"
-          alt="" className="w-full h-full object-cover" />
+        <img
+          src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&auto=format&fit=crop&q=80"
+          alt="" className="w-full h-full object-cover"
+        />
         <div className="absolute inset-0 bg-black/65" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md mx-4 rounded-3xl p-8 shadow-2xl"
+      <div className="relative z-10 w-full max-w-md mx-4 rounded-3xl p-8 shadow-2xl my-8"
         style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(28px)', border: '1px solid rgba(255,255,255,0.15)' }}>
 
         <div className="flex items-center gap-2 mb-6">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center shadow">
-            <span className="text-white font-black text-lg">B</span>
+            <span className="text-white font-black text-lg">F</span>
           </div>
           <h1 className="text-white text-xl font-black">FitandRise</h1>
         </div>
@@ -53,25 +119,84 @@ export default function Signup() {
         )}
 
         <form onSubmit={submit} className="space-y-4">
-          {[
-            { label: 'Full Name', key: 'name', type: 'text', placeholder: 'Alex Johnson' },
-            { label: 'Email', key: 'email', type: 'email', placeholder: 'you@example.com' },
-            { label: 'Password', key: 'password', type: 'password', placeholder: '••••••••' },
-            { label: 'Confirm Password', key: 'confirm', type: 'password', placeholder: '••••••••' },
-          ].map(f => (
-            <div key={f.key}>
-              <label className="text-white/70 text-xs font-semibold block mb-1.5">{f.label}</label>
-              <input type={f.type} value={form[f.key]} placeholder={f.placeholder} required
-                onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }} />
+
+          {/* Full Name */}
+          <div>
+            <label className="text-white/70 text-xs font-semibold block mb-1.5">Full Name</label>
+            <input
+              type="text" value={form.name} placeholder="Alex Johnson" required
+              onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+              className="w-full px-4 py-3 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}
+            />
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="text-white/70 text-xs font-semibold block mb-1.5">Email</label>
+            <input
+              type="email" value={form.email} placeholder="you@example.com" required
+              onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+              className="w-full px-4 py-3 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}
+            />
+          </div>
+
+          {/* Password + Strength */}
+          <div>
+            <label className="text-white/70 text-xs font-semibold block mb-1.5">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={form.password} placeholder="••••••••" required
+                onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+                className="w-full px-4 py-3 pr-12 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}
+              />
+              <button type="button" onClick={() => setShowPassword(p => !p)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80 transition-colors text-xs font-semibold">
+                {showPassword ? 'HIDE' : 'SHOW'}
+              </button>
             </div>
-          ))}
-          <button type="submit" disabled={loading}
+            <PasswordStrengthBar password={form.password} />
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <label className="text-white/70 text-xs font-semibold block mb-1.5">Confirm Password</label>
+            <div className="relative">
+              <input
+                type={showConfirm ? 'text' : 'password'}
+                value={form.confirm} placeholder="••••••••" required
+                onChange={e => setForm(p => ({ ...p, confirm: e.target.value }))}
+                className="w-full px-4 py-3 pr-12 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  border: `1px solid ${passwordsMismatch ? 'rgba(239,68,68,0.6)' : passwordsMatch ? 'rgba(34,197,94,0.6)' : 'rgba(255,255,255,0.2)'}`,
+                }}
+              />
+              <button type="button" onClick={() => setShowConfirm(p => !p)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80 transition-colors text-xs font-semibold">
+                {showConfirm ? 'HIDE' : 'SHOW'}
+              </button>
+            </div>
+            {passwordsMatch    && <p className="text-green-400 text-xs mt-1">✓ Passwords match</p>}
+            {passwordsMismatch && <p className="text-red-400  text-xs mt-1">✗ Passwords do not match</p>}
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || score < 2}
             className="w-full py-3.5 rounded-xl font-black text-white text-sm mt-2 transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
             style={{ background: 'linear-gradient(135deg,#3b82f6,#22c55e)' }}>
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
+
+          {score < 2 && form.password && (
+            <p className="text-center text-white/40 text-xs">
+              Strengthen your password to continue
+            </p>
+          )}
         </form>
 
         <p className="text-center text-white/50 text-sm mt-6">

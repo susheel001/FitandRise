@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/useApp';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { statsAPI } from '../api/api';
 import Icon from '@mdi/react';
 import { mdiWeightLifter, mdiFire, mdiDumbbell, mdiFood } from '@mdi/js';
@@ -13,31 +13,35 @@ export default function Progress() {
   useEffect(() => {
     statsAPI.weekly().then(data => {
       if (data?.length) {
-        setWeekly(data.map(d => ({
-          day: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
-          calories: d.calories_consumed || 0,
-          protein: d.protein_consumed || 0,
-          water: d.water_consumed || 0,
-        })));
+        setWeekly(
+          // Fix 1: reverse so chart goes oldest → newest (left to right)
+          [...data].reverse().map(d => ({
+            // Fix 2: append T00:00:00 to parse as local time, not UTC
+            day: new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' }),
+            calories: d.calories_consumed || 0,
+            protein:  d.protein_consumed  || 0,
+            water:    d.water_consumed    || 0,
+          }))
+        );
       }
     }).catch(() => {});
   }, []);
 
-  const bmi = (profile.weight / ((profile.height / 100) ** 2)).toFixed(1);
-  const bmiLabel = bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Overweight' : 'Obese';
-  const bmiColor = bmi < 18.5 ? '#3b82f6' : bmi < 25 ? '#22c55e' : bmi < 30 ? '#f59e0b' : '#ef4444';
+  const bmi       = (profile.weight / ((profile.height / 100) ** 2)).toFixed(1);
+  const bmiLabel  = bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Overweight' : 'Obese';
+  const bmiColor  = bmi < 18.5 ? '#3b82f6'     : bmi < 25 ? '#22c55e' : bmi < 30 ? '#f59e0b'   : '#ef4444';
 
-  const textMain = dm ? 'text-white' : 'text-gray-800';
-  const textMuted = dm ? 'text-gray-400' : 'text-gray-500';
-  const card = `rounded-2xl border p-4 sm:p-5 ${dm ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-sm'}`;
-  const tooltip = { borderRadius: '10px', border: 'none', backgroundColor: dm ? '#1f2937' : '#fff', color: dm ? '#fff' : '#111', fontSize: '11px' };
-  const grid = dm ? '#374151' : '#f3f4f6';
+  const textMain  = dm ? 'text-white'   : 'text-gray-800';
+  const textMuted = dm ? 'text-gray-400': 'text-gray-500';
+  const card      = `rounded-2xl border p-4 sm:p-5 ${dm ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-sm'}`;
+  const tooltip   = { borderRadius: '10px', border: 'none', backgroundColor: dm ? '#1f2937' : '#fff', color: dm ? '#fff' : '#111', fontSize: '11px' };
+  const grid      = dm ? '#374151' : '#f3f4f6';
 
   const summaryCards = [
-    { icon: mdiFire,        label: 'Calories Today', value: `${stats.calories} kcal`,   goal: `Goal: ${goals.calories}`, color: '#f97316', bg: dm?'#431407':'#ffedd5' },
-    { icon: mdiFood,        label: 'Protein Today',  value: `${stats.protein}g`,         goal: `Goal: ${goals.protein}g`, color: '#22c55e', bg: dm?'#14532d':'#dcfce7' },
-    { icon: mdiWeightLifter,label: 'Weight',         value: `${profile.weight} kg`,      goal: `BMI: ${bmi}`,            color: '#3b82f6', bg: dm?'#1e3a8a':'#dbeafe' },
-    { icon: mdiDumbbell,    label: 'BMI Status',     value: bmiLabel,                    goal: `Height: ${profile.height}cm`, color: bmiColor, bg: dm?'#1e293b':'#f8fafc' },
+    { icon: mdiFire,         label: 'Calories Today', value: `${stats.calories} kcal`, goal: `Goal: ${goals.calories}`,      color: '#f97316', bg: dm ? '#431407' : '#ffedd5' },
+    { icon: mdiFood,         label: 'Protein Today',  value: `${stats.protein}g`,      goal: `Goal: ${goals.protein}g`,      color: '#22c55e', bg: dm ? '#14532d' : '#dcfce7' },
+    { icon: mdiWeightLifter, label: 'Weight',         value: `${profile.weight} kg`,   goal: `BMI: ${bmi}`,                  color: '#3b82f6', bg: dm ? '#1e3a8a' : '#dbeafe' },
+    { icon: mdiDumbbell,     label: 'BMI Status',     value: bmiLabel,                 goal: `Height: ${profile.height}cm`,  color: bmiColor,  bg: dm ? '#1e293b' : '#f8fafc' },
   ];
 
   return (
@@ -68,8 +72,8 @@ export default function Progress() {
         <p className={`font-bold mb-4 text-sm sm:text-base ${textMain}`}>Today's Goal Progress</p>
         <div className="space-y-3">
           {[
-            { label: 'Calories', val: stats.calories, max: goals.calories, color: '#f97316', unit: 'kcal' },
-            { label: 'Protein',  val: stats.protein,  max: goals.protein,  color: '#22c55e', unit: 'g' },
+            { label: 'Calories', val: stats.calories, max: goals.calories, color: '#f97316', unit: 'kcal'    },
+            { label: 'Protein',  val: stats.protein,  max: goals.protein,  color: '#22c55e', unit: 'g'       },
             { label: 'Water',    val: stats.water,    max: goals.water,    color: '#3b82f6', unit: 'glasses' },
           ].map(g => (
             <div key={g.label}>
@@ -78,7 +82,10 @@ export default function Progress() {
                 <span className="text-xs font-black" style={{ color: g.color }}>{g.val} / {g.max} {g.unit}</span>
               </div>
               <div className={`w-full h-2.5 rounded-full overflow-hidden ${dm ? 'bg-gray-600' : 'bg-gray-100'}`}>
-                <div className="h-2.5 rounded-full transition-all duration-700" style={{ width: `${Math.min((g.val/g.max)*100,100)}%`, backgroundColor: g.color }} />
+                <div
+                  className="h-2.5 rounded-full transition-all duration-700"
+                  style={{ width: `${Math.min((g.val / g.max) * 100, 100)}%`, backgroundColor: g.color }}
+                />
               </div>
             </div>
           ))}
@@ -95,8 +102,8 @@ export default function Progress() {
               <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={tooltip} />
-              <Bar dataKey="calories" fill="#93c5fd" radius={[4,4,0,0]} name="Calories" />
-              <Bar dataKey="protein"  fill="#6ee7b7" radius={[4,4,0,0]} name="Protein" />
+              <Bar dataKey="calories" fill="#93c5fd" radius={[4, 4, 0, 0]} name="Calories" />
+              <Bar dataKey="protein"  fill="#6ee7b7" radius={[4, 4, 0, 0]} name="Protein"  />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -111,17 +118,22 @@ export default function Progress() {
         <p className={`font-bold mb-3 text-sm sm:text-base ${textMain}`}>BMI Overview</p>
         <div className="flex items-end gap-3 mb-3">
           <p className="text-4xl font-black" style={{ color: bmiColor }}>{bmi}</p>
-          <p className={`font-bold text-base mb-1`} style={{ color: bmiColor }}>{bmiLabel}</p>
+          <p className="font-bold text-base mb-1" style={{ color: bmiColor }}>{bmiLabel}</p>
         </div>
         <div className="flex rounded-full overflow-hidden h-3 mb-2">
-          {[['#3b82f6','20%'],['#22c55e','30%'],['#f59e0b','25%'],['#ef4444','25%']].map(([c,w],i)=>(
+          {[['#3b82f6', '20%'], ['#22c55e', '30%'], ['#f59e0b', '25%'], ['#ef4444', '25%']].map(([c, w], i) => (
             <div key={i} style={{ width: w, backgroundColor: c }} />
           ))}
         </div>
         <div className="grid grid-cols-4 gap-1 text-center">
-          {[['Under','<18.5','#3b82f6'],['Normal','18.5-25','#22c55e'],['Over','25-30','#f59e0b'],['Obese','≥30','#ef4444']].map(([l,r,c])=>(
+          {[
+            ['Under',  '<18.5',   '#3b82f6'],
+            ['Normal', '18.5-25', '#22c55e'],
+            ['Over',   '25-30',   '#f59e0b'],
+            ['Obese',  '≥30',     '#ef4444'],
+          ].map(([l, r, c]) => (
             <div key={l}>
-              <p className="text-xs font-bold" style={{color:c}}>{l}</p>
+              <p className="text-xs font-bold" style={{ color: c }}>{l}</p>
               <p className={`text-xs ${textMuted}`}>{r}</p>
             </div>
           ))}

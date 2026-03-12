@@ -7,14 +7,14 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const data = await authAPI.login(form);
-      localStorage.setItem('befit-auth', JSON.stringify({ token: data.token, ...data.user }));
+      await authAPI.login(form);
       navigate('/');
     } catch (err) {
       setError(err.message);
@@ -26,8 +26,10 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0">
-        <img src="https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=1920&auto=format&fit=crop&q=80"
-          alt="" className="w-full h-full object-cover" />
+        <img
+          src="https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=1920&auto=format&fit=crop&q=80"
+          alt="" className="w-full h-full object-cover"
+        />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg,rgba(0,0,0,0.4),rgba(0,0,0,0.75))' }} />
       </div>
 
@@ -36,7 +38,7 @@ export default function Login() {
 
         <div className="flex items-center gap-2 mb-8">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center shadow">
-            <span className="text-white font-black text-lg">B</span>
+            <span className="text-white font-black text-lg">F</span>
           </div>
           <h1 className="text-white text-xl font-black">FitandRise</h1>
         </div>
@@ -51,23 +53,41 @@ export default function Login() {
         )}
 
         <form onSubmit={submit} className="space-y-4">
-          {[
-            { label: 'Email', key: 'email', type: 'email', placeholder: 'you@example.com' },
-            { label: 'Password', key: 'password', type: 'password', placeholder: '••••••••' },
-          ].map(f => (
-            <div key={f.key}>
-              <label className="text-white/70 text-xs font-semibold block mb-1.5">{f.label}</label>
-              <input type={f.type} value={form[f.key]} placeholder={f.placeholder} required
-                onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }} />
+          {/* Email */}
+          <div>
+            <label className="text-white/70 text-xs font-semibold block mb-1.5">Email</label>
+            <input
+              type="email" value={form.email} placeholder="you@example.com" required
+              onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+              className="w-full px-4 py-3 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}
+            />
+          </div>
+
+          {/* Password with show/hide */}
+          <div>
+            <label className="text-white/70 text-xs font-semibold block mb-1.5">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={form.password} placeholder="••••••••" required
+                onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+                className="w-full px-4 py-3 pr-12 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}
+              />
+              <button type="button" onClick={() => setShowPassword(p => !p)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80 transition-colors text-xs font-semibold">
+                {showPassword ? 'HIDE' : 'SHOW'}
+              </button>
             </div>
-          ))}
+          </div>
+
           <div className="flex justify-end">
             <Link to="/forgot-password" className="text-blue-400 text-xs font-semibold hover:text-blue-300">
               Forgot password?
             </Link>
           </div>
+
           <button type="submit" disabled={loading}
             className="w-full py-3.5 rounded-xl font-black text-white text-sm mt-2 transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
             style={{ background: 'linear-gradient(135deg,#3b82f6,#22c55e)' }}>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/useApp';
+import { supabase } from '../lib/supabase';
 import Icon from '@mdi/react';
 import {
   mdiViewDashboard, mdiDumbbell, mdiFood, mdiChartBar,
@@ -9,11 +10,11 @@ import {
 } from '@mdi/js';
 
 const navLinks = [
-  { label: 'Dashboard',  to: '/',          icon: mdiViewDashboard },
-  { label: 'Workouts',   to: '/workouts',  icon: mdiDumbbell },
-  { label: 'Nutrition',  to: '/nutrition', icon: mdiFood },
-  { label: 'Progress',   to: '/progress',  icon: mdiChartBar },
-  { label: 'BMI & Tools',to: '/tools',     icon: mdiCalculator },
+  { label: 'Dashboard',   to: '/dashboard', icon: mdiViewDashboard },
+  { label: 'Workouts',    to: '/workouts',  icon: mdiDumbbell },
+  { label: 'Nutrition',   to: '/nutrition', icon: mdiFood },
+  { label: 'Progress',    to: '/progress',  icon: mdiChartBar },
+  { label: 'BMI & Tools', to: '/tools',     icon: mdiCalculator },
 ];
 
 const bottomLinks = [
@@ -26,9 +27,9 @@ function SidebarContent({ onClose = () => {} }) {
   const { darkMode: dm, profile } = state;
   const navigate = useNavigate();
 
-  const logout = () => {
-    localStorage.removeItem('befit-auth');
-    navigate('/login');
+  const logout = async () => {
+    await supabase.auth.signOut();
+    navigate('/landing');
   };
 
   const linkClass = (isActive) =>
@@ -43,9 +44,7 @@ function SidebarContent({ onClose = () => {} }) {
       {/* Logo */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
-            <Icon path={mdiDumbbell} size={0.85} color="white" />
-          </div>
+          <img src="/fitandrise.jpeg" alt="FitandRise" className="w-9 h-9 rounded-xl object-cover" />
           <h1 className={`text-xl font-black ${dm ? 'text-white' : 'text-gray-800'}`}>FitandRise</h1>
         </div>
         <button onClick={onClose} className="lg:hidden text-gray-400 hover:text-gray-600">
@@ -56,7 +55,7 @@ function SidebarContent({ onClose = () => {} }) {
       {/* Nav links */}
       <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
         {navLinks.map(({ label, to, icon }) => (
-          <NavLink key={label} to={to} end={to === '/'} onClick={onClose}
+          <NavLink key={label} to={to} onClick={onClose}
             className={({ isActive }) => linkClass(isActive)}>
             <Icon path={icon} size={0.8} />
             {label}
@@ -76,7 +75,7 @@ function SidebarContent({ onClose = () => {} }) {
 
       {/* Bottom */}
       <div className={`px-4 pb-4 pt-3 border-t space-y-2 ${dm ? 'border-gray-800' : 'border-gray-100'}`}>
-        {/* Dark mode */}
+        {/* Dark mode toggle */}
         <button onClick={toggleDarkMode}
           className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all ${dm ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}>
           <div className="flex items-center gap-2">
@@ -123,9 +122,7 @@ export default function Sidebar() {
       {/* Mobile topbar */}
       <div className={`lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3 shadow-sm ${dm ? 'bg-gray-900' : 'bg-white'}`}>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
-            <Icon path={mdiDumbbell} size={0.65} color="white" />
-          </div>
+          <img src="/fitandrise.jpeg" alt="FitandRise" className="w-7 h-7 rounded-lg object-cover" />
           <span className={`font-black ${dm ? 'text-white' : 'text-gray-800'}`}>FitandRise</span>
         </div>
         <button onClick={() => setOpen(true)} className={dm ? 'text-white' : 'text-gray-700'}>

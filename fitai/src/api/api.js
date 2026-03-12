@@ -1,172 +1,101 @@
-import { supabase } from '../lib/supabase';
+// ── BASE URL ───────────────────────────────────────────────────
+const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+// ── GET JWT TOKEN ─────────────────────────────────────────────
+const getToken = () => {
+  try {
+    return JSON.parse(localStorage.getItem('befit-auth'))?.token || null;
+  } catch {
+    return null;
+  }
+};
+
+// ── HEADERS ────────────────────────────────────────────────────
+const headers = (includeAuth = true) => {
+  const h = { 'Content-Type': 'application/json' };
+  if (includeAuth) {
+    const token = getToken();
+    if (token) h.Authorization = `Bearer ${token}`;
+  }
+  return h;
+};
+
+// ── HANDLE FETCH RESPONSE ──────────────────────────────────────
+const handle = async (res) => {
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+};
 
 // ── AUTH API ───────────────────────────────────────────────────
 export const authAPI = {
-  register: async ({ name, email, password }) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name } }
-    });
-    if (error) throw new Error(error.message);
-    return data;
-  },
+  register: (body) =>
+    fetch(`${BASE}/auth/register`, {
+      method: 'POST',
+      headers: headers(false),
+      body: JSON.stringify(body),
+    }).then(handle),
 
-  login: async ({ email, password }) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    if (error) throw new Error(error.message);
-    return data;
-  },
-
-  logout: async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw new Error(error.message);
-  }
+  login: (body) =>
+    fetch(`${BASE}/auth/login`, {
+      method: 'POST',
+      headers: headers(false),
+      body: JSON.stringify(body),
+    }).then(handle),
 };
 
 // ── PROFILE API ────────────────────────────────────────────────
 export const profileAPI = {
-  get: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    const [{ data: profile }, { data: goals }] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', user.id).single(),
-      supabase.from('goals').select('*').eq('user_id', user.id).single(),
-    ]);
-    return { profile, goals };
-  },
-
-  update: async (body) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase
-      .from('profiles')
-      .update(body)
-      .eq('id', user.id);
-    if (error) throw new Error(error.message);
-  },
-
-  updateGoals: async (body) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase
-      .from('goals')
-      .update(body)
-      .eq('user_id', user.id);
-    if (error) throw new Error(error.message);
-  },
+  get: () => fetch(`${BASE}/profile`, { headers: headers() }).then(handle),
+  update: (body) =>
+    fetch(`${BASE}/profile`, {
+      method: 'PUT',
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle),
+  updateGoals: (body) =>
+    fetch(`${BASE}/profile/goals`, {
+      method: 'PUT',
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle),
 };
 
 // ── STATS API ──────────────────────────────────────────────────
 export const statsAPI = {
-  get: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const today = new Date().toISOString().split('T')[0];
-    const { data, error } = await supabase
-      .from('daily_stats')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('date', today)
-      .single();
-    if (error && error.code !== 'PGRST116') throw new Error(error.message);
-    return data;
-  },
-
-  update: async (body) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const today = new Date().toISOString().split('T')[0];
-    const { error } = await supabase
-      .from('daily_stats')
-      .upsert({ user_id: user.id, date: today, ...body });
-    if (error) throw new Error(error.message);
-  },
-
-  weekly: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data, error } = await supabase
-      .from('daily_stats')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false })
-      .limit(7);
-    if (error) throw new Error(error.message);
-    return data;
-  },
+  get: () => fetch(`${BASE}/stats`, { headers: headers() }).then(handle),
+  update: (body) =>
+    fetch(`${BASE}/stats`, {
+      method: 'PUT',
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle),
+  weekly: () => fetch(`${BASE}/stats/weekly`, { headers: headers() }).then(handle),
 };
 
 // ── MEALS API ──────────────────────────────────────────────────
 export const mealsAPI = {
-  get: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const today = new Date().toISOString().split('T')[0];
-    const { data, error } = await supabase
-      .from('meal_logs')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('date', today);
-    if (error) throw new Error(error.message);
-
-    // Convert flat array to grouped object like your current format
-    const grouped = { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] };
-    data?.forEach(meal => {
-      if (grouped[meal.meal_type]) grouped[meal.meal_type].push({
-        id: meal.id,
-        name: meal.food_name,
-        calories: meal.calories,
-        protein: meal.protein,
-        carbs: meal.carbs,
-        fat: meal.fat,
-        img: meal.img_url,
-      });
-    });
-    return grouped;
-  },
-
-  add: async (body) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase
-      .from('meal_logs')
-      .insert({ user_id: user.id, ...body });
-    if (error) throw new Error(error.message);
-  },
-
-  remove: async (id) => {
-    const { error } = await supabase
-      .from('meal_logs')
-      .delete()
-      .eq('id', id);
-    if (error) throw new Error(error.message);
-  },
+  get: () => fetch(`${BASE}/meals`, { headers: headers() }).then(handle),
+  add: (body) =>
+    fetch(`${BASE}/meals`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle),
+  remove: (id) =>
+    fetch(`${BASE}/meals/${id}`, {
+      method: 'DELETE',
+      headers: headers(),
+    }).then(handle),
 };
 
 // ── WORKOUTS API ───────────────────────────────────────────────
 export const workoutsAPI = {
-  get: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const today = new Date().toISOString().split('T')[0];
-    const { data, error } = await supabase
-      .from('workout_logs')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('date', today);
-    if (error) throw new Error(error.message);
-
-    // Convert to grouped object format
-    const grouped = {};
-    data?.forEach(w => {
-      if (!grouped[w.muscle_group]) grouped[w.muscle_group] = [];
-      grouped[w.muscle_group].push({ id: w.exercise_id, done: w.done });
-    });
-    return grouped;
-  },
-
-  toggle: async ({ muscle_group, exercise_id, done }) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const today = new Date().toISOString().split('T')[0];
-    const { error } = await supabase
-      .from('workout_logs')
-      .upsert({ user_id: user.id, muscle_group, exercise_id, done, date: today });
-    if (error) throw new Error(error.message);
-  },
+  get: () => fetch(`${BASE}/workouts`, { headers: headers() }).then(handle),
+  toggle: (body) =>
+    fetch(`${BASE}/workouts/toggle`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle),
 };

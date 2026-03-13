@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
-// ── ANIMATED COUNTER ──────────────────────────────────────────
+
 function Counter({ target, suffix = '' }) {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
@@ -23,7 +23,7 @@ function Counter({ target, suffix = '' }) {
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
 }
 
-// ── SCREENSHOT CARD ───────────────────────────────────────────
+
 function ScreenCard({ src, label, desc, accent }) {
   return (
     <div className="group relative rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
@@ -43,7 +43,7 @@ function ScreenCard({ src, label, desc, accent }) {
   );
 }
 
-// ── TESTIMONIAL CARD ──────────────────────────────────────────
+
 function TestimonialCard({ name, role, text, avatar }) {
   return (
     <div className="rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1"
@@ -66,7 +66,7 @@ function TestimonialCard({ name, role, text, avatar }) {
   );
 }
 
-// ── MAIN ──────────────────────────────────────────────────────
+
 export default function Landing() {
   const [scrolled, setScrolled]       = useState(false);
   const [menuOpen, setMenuOpen]       = useState(false);
@@ -123,7 +123,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-[#080c14] text-white overflow-x-hidden">
 
-      {/* ── NAVBAR ── */}
+      
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#080c14]/90 backdrop-blur-xl border-b border-white/5 py-3' : 'py-5'}`}>
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -262,7 +262,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── SCREENSHOTS ── */}
+     
       <section id="screenshots" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
@@ -288,7 +288,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── FEATURES ── */}
+      
       <section id="features" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
@@ -309,7 +309,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ── */}
+      
       <section id="reviews" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">

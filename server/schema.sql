@@ -6,13 +6,13 @@
 -- 1. USERS
 -- No password column — Supabase Auth handles authentication
 CREATE TABLE IF NOT EXISTS users (
-  id         UUID PRIMARY KEY,        -- matches Supabase auth user id
+  id         UUID PRIMARY KEY,
   name       VARCHAR(100)        NOT NULL,
   email      VARCHAR(150) UNIQUE NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 2. PROFILES  (1 row per user)
+-- 2. PROFILES
 CREATE TABLE IF NOT EXISTS profiles (
   id         SERIAL PRIMARY KEY,
   user_id    UUID REFERENCES users(id) ON DELETE CASCADE UNIQUE,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   updated_at TIMESTAMP      DEFAULT NOW()
 );
 
--- 3. GOALS  (1 row per user)
+-- 3. GOALS
 CREATE TABLE IF NOT EXISTS goals (
   id         SERIAL PRIMARY KEY,
   user_id    UUID REFERENCES users(id) ON DELETE CASCADE UNIQUE,
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS goals (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- 4. DAILY STATS  (1 row per user per day)
+-- 4. DAILY STATS
 CREATE TABLE IF NOT EXISTS daily_stats (
   id                 SERIAL PRIMARY KEY,
   user_id            UUID REFERENCES users(id) ON DELETE CASCADE,

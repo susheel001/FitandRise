@@ -6,9 +6,8 @@ const authMW = require('../middleware/auth');
 // Called from frontend AFTER supabase.auth.signUp() succeeds
 // Creates the user record in your own DB using Supabase UUID
 router.post('/register', authMW, async (req, res) => {
-  const { name }  = req.body;
-  const { id, email } = req.user; // from Supabase JWT
-
+  const { name } = req.body;
+  const { id, email } = req.user; // Supabase UUID
   try {
     // Check if user already exists
     const exists = await pool.query('SELECT id FROM users WHERE id = $1', [id]);

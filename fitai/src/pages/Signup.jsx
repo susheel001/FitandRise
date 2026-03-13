@@ -52,11 +52,11 @@ function PasswordStrengthBar({ password }) {
 // ── MAIN ──────────────────────────────────────────────────────
 export default function Signup() {
   const navigate = useNavigate();
-  const [form, setForm]         = useState({ name: '', email: '', password: '', confirm: '' });
-  const [error, setError]       = useState('');
-  const [loading, setLoading]   = useState(false);
-  const [showPw, setShowPw]     = useState(false);
-  const [showCon, setShowCon]   = useState(false);
+  const [form, setForm]       = useState({ name: '', email: '', password: '', confirm: '' });
+  const [error, setError]     = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPw, setShowPw]   = useState(false);
+  const [showCon, setShowCon] = useState(false);
 
   const { score } = getStrength(form.password);
   const passwordsMatch    = form.confirm && form.password === form.confirm;
@@ -70,13 +70,34 @@ export default function Signup() {
     if (score < 2)                       return setError('Please choose a stronger password');
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      // ── Step 1: Create auth user in Supabase ──────────────
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email:    form.email,
         password: form.password,
         options:  { data: { name: form.name } },
       });
-      if (error) throw new Error(error.message);
-      navigate('/login', { state: { message: 'Account created! Please check your email to confirm.' } });
+      if (signUpError) throw new Error(signUpError.message);
+
+      // ── Step 2: Call backend to create user in DB ─────────
+      const token = data.session?.access_token;
+      if (token) {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ name: form.name }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to create user profile');
+        }
+      }
+
+      // ── Step 3: Go to dashboard ───────────────────────────
+      navigate('/dashboard');
+
     } catch (err) {
       setError(err.message);
     } finally {

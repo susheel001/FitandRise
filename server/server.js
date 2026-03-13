@@ -11,6 +11,7 @@ const app = express();
 // allow localhost for dev, and future deployed frontend URLs
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://fitand-rise.vercel.app'
 ];
 
 app.use(cors({

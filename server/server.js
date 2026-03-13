@@ -8,15 +8,19 @@ const pool      = require('./db');
 const app = express();
 
 // ── CORS ───────────────────────────────────────────────────────
-// allow localhost for dev, and future deployed frontend URLs
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://fitand-rise.vercel.app"
+  'http://localhost:5173',
+  'https://fitand-rise.vercel.app',
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    // Allow main production URL
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    // Allow ALL Vercel preview URLs for this project
+    if (origin.endsWith('.vercel.app')) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -32,7 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // ── RATE LIMITING ─────────────────────────────────────────────
 app.use('/api/', rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 100,
   message: { error: 'Too many requests!' }
 }));

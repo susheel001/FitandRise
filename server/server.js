@@ -9,12 +9,10 @@ const app = express();
 
 // ── CORS ───────────────────────────────────────────────────────
 // allow localhost for dev, and future deployed frontend URLs
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://fitand-rise.vercel.app"
-  ]
-}));
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://fitand-rise.vercel.app"
+];
 
 app.use(cors({
   origin: (origin, callback) => {

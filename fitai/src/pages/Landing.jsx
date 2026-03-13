@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
-
+// ── ANIMATED COUNTER ──────────────────────────────────────────
 function Counter({ target, suffix = '' }) {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
@@ -23,15 +23,18 @@ function Counter({ target, suffix = '' }) {
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
 }
 
-
+// ── SCREENSHOT CARD ───────────────────────────────────────────
 function ScreenCard({ src, label, desc, accent }) {
   return (
-    <div className="group relative rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
-      style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+    <div className="group relative rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl cursor-pointer"
+      style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+      onClick={() => window.open(src, '_blank')}>
       <div className="relative overflow-hidden">
         <img src={src} alt={label} className="w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{ background: `linear-gradient(to top, ${accent}44, transparent)` }} />
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"
+          style={{ background: `linear-gradient(to top, ${accent}88, transparent)` }}>
+          <span className="text-white text-xs font-bold bg-black/40 px-3 py-1 rounded-full">Click to expand</span>
+        </div>
       </div>
       <div className="p-4" style={{ background: 'rgba(255,255,255,0.03)' }}>
         <p className="font-black text-white text-sm mb-1">{label}</p>
@@ -43,34 +46,12 @@ function ScreenCard({ src, label, desc, accent }) {
   );
 }
 
-
-function TestimonialCard({ name, role, text, avatar }) {
-  return (
-    <div className="rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1"
-      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-      <div className="flex gap-1 mb-4">
-        {[1,2,3,4,5].map(i => <span key={i} className="text-yellow-400 text-sm">★</span>)}
-      </div>
-      <p className="text-white/60 text-sm leading-relaxed mb-4">"{text}"</p>
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm text-white"
-          style={{ background: 'linear-gradient(135deg,#3b82f6,#22c55e)' }}>
-          {avatar}
-        </div>
-        <div>
-          <p className="text-white font-bold text-sm">{name}</p>
-          <p className="text-white/40 text-xs">{role}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
+// ── MAIN ──────────────────────────────────────────────────────
 export default function Landing() {
-  const [scrolled, setScrolled]       = useState(false);
-  const [menuOpen, setMenuOpen]       = useState(false);
+  const [scrolled, setScrolled]         = useState(false);
+  const [menuOpen, setMenuOpen]         = useState(false);
   const [activeScreen, setActiveScreen] = useState(0);
+  const [lightbox, setLightbox]         = useState(null); // for full screen image view
 
   const screens = [
     { src: '/fit1.png', label: 'Dashboard',   accent: '#3b82f6' },
@@ -89,6 +70,13 @@ export default function Landing() {
   useEffect(() => {
     const t = setInterval(() => setActiveScreen(p => (p + 1) % screens.length), 3000);
     return () => clearInterval(t);
+  }, []);
+
+  // Close lightbox on escape key
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') setLightbox(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   const features = [
@@ -114,16 +102,21 @@ export default function Landing() {
     { value: 100, suffix: '%', label: 'Free to Use' },
   ];
 
-  const testimonials = [
-    { name: 'Rahul M.',    role: 'Gym enthusiast',    avatar: 'R', text: 'FitandRise completely changed how I track my workouts. The interface is clean and super easy to use every day.' },
-    { name: 'Priya S.',    role: 'Fitness beginner',  avatar: 'P', text: 'As someone just starting out, the goal setting and progress charts really keep me motivated to stay on track.' },
-    { name: 'Aditya K.',   role: 'Personal trainer',  avatar: 'A', text: 'I recommend FitandRise to all my clients. The meal logging and BMI tools are exactly what beginners need.' },
-  ];
-
   return (
     <div className="min-h-screen bg-[#080c14] text-white overflow-x-hidden">
 
-      
+      {/* ── LIGHTBOX ── */}
+      {lightbox && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setLightbox(null)}>
+          <button className="absolute top-4 right-4 text-white/70 hover:text-white text-2xl font-black">✕</button>
+          <img src={lightbox} alt="Screenshot" className="max-w-5xl w-full rounded-2xl shadow-2xl"
+            style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+            onClick={e => e.stopPropagation()} />
+        </div>
+      )}
+
+      {/* ── NAVBAR ── */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#080c14]/90 backdrop-blur-xl border-b border-white/5 py-3' : 'py-5'}`}>
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -131,7 +124,7 @@ export default function Landing() {
             <span className="font-black text-lg">FitandRise</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
-            {[['Features','#features'],['Screenshots','#screenshots'],['Reviews','#reviews'],['How it Works','#how-it-works']].map(([l,h])=>(
+            {[['Features','#features'],['App Preview','#app-preview'],['How it Works','#how-it-works']].map(([l,h])=>(
               <a key={l} href={h} className="text-white/50 hover:text-white text-sm font-medium transition-colors">{l}</a>
             ))}
           </div>
@@ -147,7 +140,7 @@ export default function Landing() {
         {menuOpen && (
           <div className="md:hidden mt-2 mx-6 rounded-2xl p-4 space-y-3"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-            {[['Features','#features'],['Screenshots','#screenshots'],['Reviews','#reviews'],['How it Works','#how-it-works']].map(([l,h])=>(
+            {[['Features','#features'],['App Preview','#app-preview'],['How it Works','#how-it-works']].map(([l,h])=>(
               <a key={l} href={h} className="block text-white/60 hover:text-white text-sm py-1" onClick={() => setMenuOpen(false)}>{l}</a>
             ))}
             <div className="flex gap-2 pt-2">
@@ -172,13 +165,11 @@ export default function Landing() {
 
         <div className="relative z-10 max-w-6xl mx-auto w-full grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            {/* Free badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-4"
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-8"
               style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#86efac' }}>
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
               100% Free — No credit card required
             </div>
-
             <h1 className="text-5xl sm:text-6xl font-black leading-none tracking-tight mb-6">
               Track. Train.{' '}
               <span style={{ background: 'linear-gradient(135deg,#3b82f6,#22c55e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
@@ -195,34 +186,19 @@ export default function Landing() {
                 style={{ background: 'linear-gradient(135deg,#3b82f6,#22c55e)', boxShadow: '0 0 40px rgba(59,130,246,0.3)' }}>
                 Start for Free →
               </Link>
-              <a href="#screenshots"
+              <a href="#app-preview"
                 className="px-8 py-4 rounded-2xl font-bold text-white/70 hover:text-white text-base transition-all text-center"
                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                See Screenshots
+                See the App
               </a>
-            </div>
-
-            {/* Trust indicators */}
-            <div className="flex items-center gap-6 mt-8">
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  {['R','P','A','S'].map((l,i) => (
-                    <div key={i} className="w-7 h-7 rounded-full border-2 border-[#080c14] flex items-center justify-center text-xs font-black text-white"
-                      style={{ background: 'linear-gradient(135deg,#3b82f6,#22c55e)' }}>{l}</div>
-                  ))}
-                </div>
-                <span className="text-white/40 text-xs">100+ users</span>
-              </div>
-              <div className="flex items-center gap-1">
-                {[1,2,3,4,5].map(i => <span key={i} className="text-yellow-400 text-xs">★</span>)}
-                <span className="text-white/40 text-xs ml-1">5.0 rating</span>
-              </div>
             </div>
           </div>
 
           {/* Right — rotating screenshot */}
           <div className="relative">
-            <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="rounded-2xl overflow-hidden shadow-2xl cursor-pointer"
+              style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+              onClick={() => setLightbox(screens[activeScreen].src)}>
               <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5"
                 style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <div className="w-3 h-3 rounded-full bg-red-500/60" />
@@ -240,7 +216,6 @@ export default function Landing() {
                   style={{ width: i === activeScreen ? '24px' : '8px', height: '8px', background: i === activeScreen ? s.accent : 'rgba(255,255,255,0.2)' }} />
               ))}
             </div>
-            <p className="text-center text-white/30 text-xs mt-2">{screens[activeScreen].label}</p>
             <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-3/4 h-20 blur-3xl opacity-20 rounded-full"
               style={{ background: `linear-gradient(90deg,${screens[activeScreen].accent},transparent)` }} />
           </div>
@@ -262,33 +237,59 @@ export default function Landing() {
         </div>
       </section>
 
-     
-      <section id="screenshots" className="py-20 px-6">
+      {/* ── APP PREVIEW ── */}
+      <section id="app-preview" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-blue-400 text-sm font-bold tracking-widest uppercase mb-3">Real app, real UI</p>
             <h2 className="text-3xl sm:text-4xl font-black mb-4">See exactly what you're getting</h2>
-            <p className="text-white/40 max-w-xl mx-auto">No mockups. These are actual screenshots from the live app.</p>
+            <p className="text-white/40 max-w-xl mx-auto">No mockups. Click any image to view it fullscreen.</p>
           </div>
-          <div className="rounded-2xl overflow-hidden mb-4 shadow-2xl" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+
+          {/* Big dashboard screenshot */}
+          <div className="rounded-2xl overflow-hidden mb-4 shadow-2xl cursor-pointer group"
+            style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+            onClick={() => setLightbox('/fit1.png')}>
             <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5" style={{ background: 'rgba(255,255,255,0.03)' }}>
               <div className="w-3 h-3 rounded-full bg-red-500/60" />
               <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
               <div className="w-3 h-3 rounded-full bg-green-500/60" />
-              <span className="ml-3 text-white/20 text-xs">Dashboard — fitand-rise.vercel.app/dashboard</span>
+              <span className="ml-3 text-white/20 text-xs">fitand-rise.vercel.app/dashboard</span>
             </div>
-            <img src="/fit1.png" alt="Dashboard" className="w-full" />
+            <div className="relative">
+              <img src="/fit1.png" alt="Dashboard" className="w-full transition-transform duration-500 group-hover:scale-[1.01]" />
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"
+                style={{ background: 'rgba(0,0,0,0.3)' }}>
+                <span className="text-white font-bold bg-black/50 px-4 py-2 rounded-xl text-sm">Click to expand</span>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <ScreenCard src="/fit2.png" label="Workout Tracker" desc="Pick a muscle group and track exercises with video guides" accent="#ef4444" />
-            <ScreenCard src="/fit3.png" label="Nutrition Logger" desc="Search and log foods with full macro breakdown"           accent="#22c55e" />
-            <ScreenCard src="/fit5.png" label="Progress Charts"  desc="Weekly bar charts showing calories and protein trends"    accent="#f97316" />
-            <ScreenCard src="/fit4.png" label="BMI & Tools"      desc="BMI calculator and calorie burn estimator"                accent="#a855f7" />
+
+          {/* 4 smaller screenshots — no labels */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { src: '/fit2.png', label: 'Workouts',  accent: '#ef4444' },
+              { src: '/fit3.png', label: 'Nutrition', accent: '#22c55e' },
+              { src: '/fit5.png', label: 'Progress',  accent: '#f97316' },
+              { src: '/fit4.png', label: 'BMI Tools', accent: '#a855f7' },
+            ].map((s, i) => (
+              <div key={i} className="group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
+                style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                onClick={() => setLightbox(s.src)}>
+                <img src={s.src} alt={s.label} className="w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"
+                  style={{ background: `linear-gradient(to top, ${s.accent}88, transparent)` }}>
+                  <span className="text-white text-xs font-bold">Click to expand</span>
+                </div>
+                <div className="absolute bottom-0 left-0 h-0.5 w-0 group-hover:w-full transition-all duration-500"
+                  style={{ background: `linear-gradient(90deg, ${s.accent}, transparent)` }} />
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      
+      {/* ── FEATURES ── */}
       <section id="features" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
@@ -300,25 +301,14 @@ export default function Landing() {
             {features.map((f, i) => (
               <div key={i} className="group rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="text-3xl mb-4">{f.icon}</div>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 text-lg"
+                  style={{ background: `${f.color}22`, border: `1px solid ${f.color}44`, color: f.color }}>
+                  {f.icon}
+                </div>
                 <h3 className="text-white font-black text-base mb-2">{f.title}</h3>
                 <p className="text-white/40 text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      
-      <section id="reviews" className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-yellow-400 text-sm font-bold tracking-widest uppercase mb-3">What users say</p>
-            <h2 className="text-3xl sm:text-4xl font-black mb-4">Real people, real results</h2>
-            <p className="text-white/40 max-w-xl mx-auto">Join hundreds of users already tracking their fitness journey with FitandRise.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {testimonials.map((t, i) => <TestimonialCard key={i} {...t} />)}
           </div>
         </div>
       </section>
@@ -355,7 +345,7 @@ export default function Landing() {
             <img src="/fitandrise.jpeg" alt="FitandRise" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-6" />
             <h2 className="text-3xl sm:text-4xl font-black mb-4">Ready to rise?</h2>
             <p className="text-white/50 mb-2 max-w-md mx-auto">Join FitandRise today and take the first step toward a stronger, healthier you.</p>
-            <p className="text-green-400 text-sm font-bold mb-8">✓ Completely free — no credit card needed</p>
+            <p className="text-green-400 text-sm font-bold mb-8">Completely free — no credit card needed</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/signup"
                 className="px-8 py-4 rounded-2xl font-black text-white text-base transition-all hover:opacity-90 hover:scale-105"

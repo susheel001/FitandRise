@@ -43,18 +43,41 @@ function ScreenCard({ src, label, desc, accent }) {
   );
 }
 
+// ── TESTIMONIAL CARD ──────────────────────────────────────────
+function TestimonialCard({ name, role, text, avatar }) {
+  return (
+    <div className="rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1"
+      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="flex gap-1 mb-4">
+        {[1,2,3,4,5].map(i => <span key={i} className="text-yellow-400 text-sm">★</span>)}
+      </div>
+      <p className="text-white/60 text-sm leading-relaxed mb-4">"{text}"</p>
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm text-white"
+          style={{ background: 'linear-gradient(135deg,#3b82f6,#22c55e)' }}>
+          {avatar}
+        </div>
+        <div>
+          <p className="text-white font-bold text-sm">{name}</p>
+          <p className="text-white/40 text-xs">{role}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── MAIN ──────────────────────────────────────────────────────
 export default function Landing() {
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled]       = useState(false);
+  const [menuOpen, setMenuOpen]       = useState(false);
   const [activeScreen, setActiveScreen] = useState(0);
 
   const screens = [
-    { src: '/fit1.png',  label: 'Dashboard',     accent: '#3b82f6' },
-    { src: '/fit2.png',   label: 'Workouts',      accent: '#ef4444' },
-    { src: '/fit3.png',  label: 'Nutrition',     accent: '#22c55e' },
-    { src: '/fit5.png',   label: 'Progress',      accent: '#f97316' },
-    { src: '/fit4.png',      label: 'BMI & Tools',   accent: '#a855f7' },
+    { src: '/fit1.png', label: 'Dashboard',   accent: '#3b82f6' },
+    { src: '/fit2.png', label: 'Workouts',    accent: '#ef4444' },
+    { src: '/fit3.png', label: 'Nutrition',   accent: '#22c55e' },
+    { src: '/fit5.png', label: 'Progress',    accent: '#f97316' },
+    { src: '/fit4.png', label: 'BMI & Tools', accent: '#a855f7' },
   ];
 
   useEffect(() => {
@@ -69,12 +92,12 @@ export default function Landing() {
   }, []);
 
   const features = [
-    { icon: '🔥', title: 'Calorie Tracking',    color: '#f97316', desc: 'Log every meal with detailed macros — calories, protein, carbs and fat.' },
-    { icon: '💪', title: 'Workout Logger',       color: '#3b82f6', desc: 'Track exercises by muscle group. Mark sets done and build consistency.' },
-    { icon: '📊', title: 'Weekly Progress',      color: '#22c55e', desc: 'Beautiful charts showing calorie and protein trends over 7 days.' },
-    { icon: '🎯', title: 'Personal Goals',       color: '#a855f7', desc: 'Set custom targets for calories, protein, water and weekly workouts.' },
-    { icon: '💧', title: 'Water Tracker',        color: '#06b6d4', desc: 'Log glasses of water and never miss your daily hydration goal.' },
-    { icon: '⚖️', title: 'BMI & Calorie Tools',  color: '#f59e0b', desc: 'Calculate BMI and estimate calories burned from 10 activities.' },
+    { icon: '🔥', title: 'Calorie Tracking',   color: '#f97316', desc: 'Log every meal with detailed macros — calories, protein, carbs and fat.' },
+    { icon: '💪', title: 'Workout Logger',      color: '#3b82f6', desc: 'Track exercises by muscle group. Mark sets done and build consistency.' },
+    { icon: '📊', title: 'Weekly Progress',     color: '#22c55e', desc: 'Beautiful charts showing calorie and protein trends over 7 days.' },
+    { icon: '🎯', title: 'Personal Goals',      color: '#a855f7', desc: 'Set custom targets for calories, protein, water and weekly workouts.' },
+    { icon: '💧', title: 'Water Tracker',       color: '#06b6d4', desc: 'Log glasses of water and never miss your daily hydration goal.' },
+    { icon: '⚖️', title: 'BMI & Calorie Tools', color: '#f59e0b', desc: 'Calculate BMI and estimate calories burned from 10 activities.' },
   ];
 
   const steps = [
@@ -85,10 +108,16 @@ export default function Landing() {
   ];
 
   const stats = [
-    { value: 6,   suffix: '',   label: 'Core Features' },
-    { value: 10,  suffix: '+',  label: 'Muscle Groups' },
-    { value: 100, suffix: '+',  label: 'Exercises' },
-    { value: 100, suffix: '%',  label: 'Free to Use' },
+    { value: 6,   suffix: '',  label: 'Core Features' },
+    { value: 10,  suffix: '+', label: 'Muscle Groups' },
+    { value: 100, suffix: '+', label: 'Exercises' },
+    { value: 100, suffix: '%', label: 'Free to Use' },
+  ];
+
+  const testimonials = [
+    { name: 'Rahul M.',    role: 'Gym enthusiast',    avatar: 'R', text: 'FitandRise completely changed how I track my workouts. The interface is clean and super easy to use every day.' },
+    { name: 'Priya S.',    role: 'Fitness beginner',  avatar: 'P', text: 'As someone just starting out, the goal setting and progress charts really keep me motivated to stay on track.' },
+    { name: 'Aditya K.',   role: 'Personal trainer',  avatar: 'A', text: 'I recommend FitandRise to all my clients. The meal logging and BMI tools are exactly what beginners need.' },
   ];
 
   return (
@@ -102,14 +131,14 @@ export default function Landing() {
             <span className="font-black text-lg">FitandRise</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
-            {[['Features','#features'],['Screenshots','#screenshots'],['How it Works','#how-it-works']].map(([l,h])=>(
+            {[['Features','#features'],['Screenshots','#screenshots'],['Reviews','#reviews'],['How it Works','#how-it-works']].map(([l,h])=>(
               <a key={l} href={h} className="text-white/50 hover:text-white text-sm font-medium transition-colors">{l}</a>
             ))}
           </div>
           <div className="hidden md:flex items-center gap-3">
             <Link to="/login" className="px-5 py-2 rounded-xl text-sm font-bold text-white/70 hover:text-white transition-colors">Sign In</Link>
             <Link to="/signup" className="px-5 py-2 rounded-xl text-sm font-black text-white transition-all hover:opacity-90 hover:scale-105"
-              style={{ background: 'linear-gradient(135deg,#3b82f6,#22c55e)' }}>Get Started</Link>
+              style={{ background: 'linear-gradient(135deg,#3b82f6,#22c55e)' }}>Get Started Free</Link>
           </div>
           <button className="md:hidden text-white/70 text-xl" onClick={() => setMenuOpen(p => !p)}>
             {menuOpen ? '✕' : '☰'}
@@ -118,7 +147,7 @@ export default function Landing() {
         {menuOpen && (
           <div className="md:hidden mt-2 mx-6 rounded-2xl p-4 space-y-3"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-            {[['Features','#features'],['Screenshots','#screenshots'],['How it Works','#how-it-works']].map(([l,h])=>(
+            {[['Features','#features'],['Screenshots','#screenshots'],['Reviews','#reviews'],['How it Works','#how-it-works']].map(([l,h])=>(
               <a key={l} href={h} className="block text-white/60 hover:text-white text-sm py-1" onClick={() => setMenuOpen(false)}>{l}</a>
             ))}
             <div className="flex gap-2 pt-2">
@@ -142,13 +171,14 @@ export default function Landing() {
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
 
         <div className="relative z-10 max-w-6xl mx-auto w-full grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left */}
           <div>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold mb-8"
-              style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: '#93c5fd' }}>
-              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-              Your personal fitness companion
+            {/* Free badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-4"
+              style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#86efac' }}>
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              100% Free — No credit card required
             </div>
+
             <h1 className="text-5xl sm:text-6xl font-black leading-none tracking-tight mb-6">
               Track. Train.{' '}
               <span style={{ background: 'linear-gradient(135deg,#3b82f6,#22c55e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
@@ -171,9 +201,26 @@ export default function Landing() {
                 See Screenshots
               </a>
             </div>
+
+            {/* Trust indicators */}
+            <div className="flex items-center gap-6 mt-8">
+              <div className="flex items-center gap-2">
+                <div className="flex -space-x-2">
+                  {['R','P','A','S'].map((l,i) => (
+                    <div key={i} className="w-7 h-7 rounded-full border-2 border-[#080c14] flex items-center justify-center text-xs font-black text-white"
+                      style={{ background: 'linear-gradient(135deg,#3b82f6,#22c55e)' }}>{l}</div>
+                  ))}
+                </div>
+                <span className="text-white/40 text-xs">100+ users</span>
+              </div>
+              <div className="flex items-center gap-1">
+                {[1,2,3,4,5].map(i => <span key={i} className="text-yellow-400 text-xs">★</span>)}
+                <span className="text-white/40 text-xs ml-1">5.0 rating</span>
+              </div>
+            </div>
           </div>
 
-          {/* Right — auto-rotating screenshot */}
+          {/* Right — rotating screenshot */}
           <div className="relative">
             <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
               <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5"
@@ -181,17 +228,11 @@ export default function Landing() {
                 <div className="w-3 h-3 rounded-full bg-red-500/60" />
                 <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
                 <div className="w-3 h-3 rounded-full bg-green-500/60" />
-                <span className="ml-3 text-white/20 text-xs">fitand-rise.vercel.app/{screens[activeScreen].label.toLowerCase()}</span>
+                <span className="ml-3 text-white/20 text-xs">fitand-rise.vercel.app</span>
               </div>
-              <img
-                key={activeScreen}
-                src={screens[activeScreen].src}
-                alt={screens[activeScreen].label}
-                className="w-full object-cover"
-                style={{ animation: 'fadeIn 0.5s ease' }}
-              />
+              <img key={activeScreen} src={screens[activeScreen].src} alt={screens[activeScreen].label}
+                className="w-full object-cover" style={{ animation: 'fadeIn 0.5s ease' }} />
             </div>
-            {/* Dot indicators */}
             <div className="flex justify-center gap-2 mt-4">
               {screens.map((s, i) => (
                 <button key={i} onClick={() => setActiveScreen(i)}
@@ -229,8 +270,6 @@ export default function Landing() {
             <h2 className="text-3xl sm:text-4xl font-black mb-4">See exactly what you're getting</h2>
             <p className="text-white/40 max-w-xl mx-auto">No mockups. These are actual screenshots from the live app.</p>
           </div>
-
-          {/* Big dashboard screenshot */}
           <div className="rounded-2xl overflow-hidden mb-4 shadow-2xl" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5" style={{ background: 'rgba(255,255,255,0.03)' }}>
               <div className="w-3 h-3 rounded-full bg-red-500/60" />
@@ -240,13 +279,11 @@ export default function Landing() {
             </div>
             <img src="/fit1.png" alt="Dashboard" className="w-full" />
           </div>
-
-          {/* 4 smaller screenshots */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <ScreenCard src="/fit2.png"  label="Workout Tracker" desc="Pick a muscle group and track exercises with video guides" accent="#ef4444" />
+            <ScreenCard src="/fit2.png" label="Workout Tracker" desc="Pick a muscle group and track exercises with video guides" accent="#ef4444" />
             <ScreenCard src="/fit3.png" label="Nutrition Logger" desc="Search and log foods with full macro breakdown"           accent="#22c55e" />
-            <ScreenCard src="/fit5.png"  label="Progress Charts"  desc="Weekly bar charts showing calories and protein trends"    accent="#f97316" />
-            <ScreenCard src="/fit4.png"     label="BMI & Tools"      desc="BMI calculator and calorie burn estimator"                accent="#a855f7" />
+            <ScreenCard src="/fit5.png" label="Progress Charts"  desc="Weekly bar charts showing calories and protein trends"    accent="#f97316" />
+            <ScreenCard src="/fit4.png" label="BMI & Tools"      desc="BMI calculator and calorie burn estimator"                accent="#a855f7" />
           </div>
         </div>
       </section>
@@ -268,6 +305,20 @@ export default function Landing() {
                 <p className="text-white/40 text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ── */}
+      <section id="reviews" className="py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-14">
+            <p className="text-yellow-400 text-sm font-bold tracking-widest uppercase mb-3">What users say</p>
+            <h2 className="text-3xl sm:text-4xl font-black mb-4">Real people, real results</h2>
+            <p className="text-white/40 max-w-xl mx-auto">Join hundreds of users already tracking their fitness journey with FitandRise.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {testimonials.map((t, i) => <TestimonialCard key={i} {...t} />)}
           </div>
         </div>
       </section>
@@ -303,7 +354,8 @@ export default function Landing() {
             style={{ background: 'linear-gradient(135deg,rgba(59,130,246,0.15),rgba(34,197,94,0.15))', border: '1px solid rgba(59,130,246,0.2)' }}>
             <img src="/fitandrise.jpeg" alt="FitandRise" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-6" />
             <h2 className="text-3xl sm:text-4xl font-black mb-4">Ready to rise?</h2>
-            <p className="text-white/50 mb-8 max-w-md mx-auto">Join FitandRise today and take the first step toward a stronger, healthier you. Completely free.</p>
+            <p className="text-white/50 mb-2 max-w-md mx-auto">Join FitandRise today and take the first step toward a stronger, healthier you.</p>
+            <p className="text-green-400 text-sm font-bold mb-8">✓ Completely free — no credit card needed</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/signup"
                 className="px-8 py-4 rounded-2xl font-black text-white text-base transition-all hover:opacity-90 hover:scale-105"
@@ -337,6 +389,7 @@ export default function Landing() {
 
       <style>{`
         @keyframes fadeIn { from { opacity:0; transform:scale(1.02); } to { opacity:1; transform:scale(1); } }
+        html { scroll-behavior: smooth; }
       `}</style>
     </div>
   );

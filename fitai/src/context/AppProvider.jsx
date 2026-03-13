@@ -5,12 +5,12 @@ import { supabase } from '../lib/supabase';
 
 const defaultState = {
   darkMode: false,
-  profile: { name: 'User', age: 25, weight: 70, height: 170, goal: 'General Fitness', level: 'Beginner', gender: 'Male' },
-  goals: { calories: 2000, protein: 120, water: 8, workouts: 5 },
-  stats: { calories: 0, protein: 0, water: 0, fitnessScore: 0 },
-  mealLog: { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] },
+  profile:  { name: 'User', age: 25, weight: 70, height: 170, goal: 'General Fitness', level: 'Beginner', gender: 'Male' },
+  goals:    { calories: 2000, protein: 120, water: 8, workouts: 5 },
+  stats:    { calories: 0, protein: 0, water: 0, fitnessScore: 0 },
+  mealLog:  { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] },
   workouts: {},
-  loading: false,
+  loading:  false,
 };
 
 export default function AppProvider({ children }) {
@@ -29,10 +29,9 @@ export default function AppProvider({ children }) {
     });
   }, []);
 
-  // ── Load data when user is logged in via Supabase Auth ────────
+  // ── Load data when Supabase session exists ────────────────────
   useEffect(() => {
     async function load() {
-      // Check if there's an active Supabase session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
@@ -48,35 +47,21 @@ export default function AppProvider({ children }) {
           ...prev,
           loading: false,
           profile: profileData?.profile
-            ? {
-                name:   profileData.profile.name   || prev.profile.name,
-                age:    profileData.profile.age    || prev.profile.age,
-                weight: profileData.profile.weight || prev.profile.weight,
-                height: profileData.profile.height || prev.profile.height,
-                goal:   profileData.profile.goal   || prev.profile.goal,
-                level:  profileData.profile.level  || prev.profile.level,
-                gender: profileData.profile.gender || prev.profile.gender,
-              }
+            ? { name: profileData.profile.name || prev.profile.name, age: profileData.profile.age || prev.profile.age, weight: profileData.profile.weight || prev.profile.weight, height: profileData.profile.height || prev.profile.height, goal: profileData.profile.goal || prev.profile.goal, level: profileData.profile.level || prev.profile.level, gender: profileData.profile.gender || prev.profile.gender }
             : prev.profile,
           goals: profileData?.goals
-            ? {
-                calories: profileData.goals.calories || 2000,
-                protein:  profileData.goals.protein  || 120,
-                water:    profileData.goals.water    || 8,
-                workouts: profileData.goals.workouts || 5,
-              }
+            ? { calories: profileData.goals.calories || 2000, protein: profileData.goals.protein || 120, water: profileData.goals.water || 8, workouts: profileData.goals.workouts || 5 }
             : prev.goals,
-          stats: statsData
-            ? { ...prev.stats, calories: statsData.calories_consumed || 0, protein: statsData.protein_consumed || 0, water: statsData.water_consumed || 0 }
-            : prev.stats,
-          mealLog:  mealsData   || prev.mealLog,
+          stats:    statsData    ? { ...prev.stats, calories: statsData.calories_consumed || 0, protein: statsData.protein_consumed || 0, water: statsData.water_consumed || 0 } : prev.stats,
+          mealLog:  mealsData    || prev.mealLog,
           workouts: workoutsData || prev.workouts,
         }));
       } catch { update({ loading: false }); }
     }
+
     load();
 
-    // ── Listen for sign-in/sign-out events ─────────────────────
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN')  load();
       if (event === 'SIGNED_OUT') {
@@ -114,9 +99,8 @@ export default function AppProvider({ children }) {
   const addMeal = useCallback(async (mealType, food) => {
     const newLog = { ...state.mealLog, [mealType]: [...(state.mealLog[mealType] || []), food] };
     update({ mealLog: newLog, stats: { ...state.stats, calories: state.stats.calories + food.calories, protein: state.stats.protein + food.protein } });
-    try {
-      await mealsAPI.add({ meal_type: mealType, food_name: food.name, calories: food.calories, protein: food.protein, carbs: food.carbs, fat: food.fat, img_url: food.img });
-    } catch {}
+    try { await mealsAPI.add({ meal_type: mealType, food_name: food.name, calories: food.calories, protein: food.protein, carbs: food.carbs, fat: food.fat, img_url: food.img }); }
+    catch {}
   }, [state.mealLog, state.stats]);
 
   const removeMeal = useCallback(async (mealType, idx) => {

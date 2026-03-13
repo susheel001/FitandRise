@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 export default function ProtectedRoute({ children }) {
-  const [session, setSession] = useState(undefined); // undefined = still loading
+  const [session, setSession] = useState(undefined); // undefined = loading
 
   useEffect(() => {
     // Get current session
@@ -11,7 +11,7 @@ export default function ProtectedRoute({ children }) {
       setSession(session);
     });
 
-    // Listen for auth changes (login/logout)
+    // Listen for login/logout changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
@@ -19,7 +19,7 @@ export default function ProtectedRoute({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Still checking auth — show nothing (or a spinner)
+  // Still checking — show spinner
   if (session === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
@@ -28,9 +28,9 @@ export default function ProtectedRoute({ children }) {
     );
   }
 
-  // Not logged in — redirect to login
-  if (!session) return <Navigate to="/login" replace />;
+  // Not logged in — go to landing
+  if (!session) return <Navigate to="/landing" replace />;
 
-  // Logged in — show the page
+  // Logged in — show page
   return children;
 }

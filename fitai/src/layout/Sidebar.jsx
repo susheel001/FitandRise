@@ -29,18 +29,22 @@ function SidebarContent({ onClose = () => {} }) {
 
   const logout = async () => {
     await supabase.auth.signOut();
-    navigate('/landing');
+    onClose();
+    navigate('/');
   };
 
   const linkClass = (isActive) =>
     `flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all ${
       isActive
         ? 'bg-blue-500 text-white shadow-md'
-        : dm ? 'text-gray-400 hover:text-white hover:bg-gray-800' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
+        : dm
+          ? 'text-gray-400 hover:text-white hover:bg-gray-800'
+          : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
     }`;
 
   return (
     <div className={`flex flex-col h-full ${dm ? 'bg-gray-900' : 'bg-white'}`}>
+
       {/* Logo */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
         <div className="flex items-center gap-2.5">
@@ -55,7 +59,8 @@ function SidebarContent({ onClose = () => {} }) {
       {/* Nav links */}
       <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
         {navLinks.map(({ label, to, icon }) => (
-          <NavLink key={label} to={to} onClick={onClose}
+          <NavLink key={label} to={to}
+            onClick={onClose} // ✅ closes mobile drawer on navigate
             className={({ isActive }) => linkClass(isActive)}>
             <Icon path={icon} size={0.8} />
             {label}
@@ -65,7 +70,8 @@ function SidebarContent({ onClose = () => {} }) {
         <div className={`my-3 border-t ${dm ? 'border-gray-800' : 'border-gray-100'}`} />
 
         {bottomLinks.map(({ label, to, icon }) => (
-          <NavLink key={label} to={to} onClick={onClose}
+          <NavLink key={label} to={to}
+            onClick={onClose} // ✅ closes mobile drawer on navigate
             className={({ isActive }) => linkClass(isActive)}>
             <Icon path={icon} size={0.8} />
             {label}
@@ -75,9 +81,12 @@ function SidebarContent({ onClose = () => {} }) {
 
       {/* Bottom */}
       <div className={`px-4 pb-4 pt-3 border-t space-y-2 ${dm ? 'border-gray-800' : 'border-gray-100'}`}>
+
         {/* Dark mode toggle */}
         <button onClick={toggleDarkMode}
-          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all ${dm ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}>
+          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all ${
+            dm ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+          }`}>
           <div className="flex items-center gap-2">
             <Icon path={dm ? mdiWeatherSunny : mdiWeatherNight} size={0.75} />
             <span className="font-medium text-sm">{dm ? 'Light Mode' : 'Dark Mode'}</span>
@@ -114,7 +123,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Desktop */}
+      {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-56 shrink-0 flex-col shadow-sm">
         <SidebarContent />
       </aside>

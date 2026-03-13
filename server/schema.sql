@@ -1,21 +1,21 @@
 -- ============================================================
--- BeFit MVP Database Schema
+-- FitandRise Database Schema
 -- Run this entire file in Supabase SQL Editor
 -- ============================================================
 
 -- 1. USERS
+-- No password column — Supabase Auth handles authentication
 CREATE TABLE IF NOT EXISTS users (
-  id         SERIAL PRIMARY KEY,
+  id         UUID PRIMARY KEY,        -- matches Supabase auth user id
   name       VARCHAR(100)        NOT NULL,
   email      VARCHAR(150) UNIQUE NOT NULL,
-  password   VARCHAR(255)        NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- 2. PROFILES  (1 row per user)
 CREATE TABLE IF NOT EXISTS profiles (
   id         SERIAL PRIMARY KEY,
-  user_id    INTEGER REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+  user_id    UUID REFERENCES users(id) ON DELETE CASCADE UNIQUE,
   age        INTEGER        DEFAULT 25,
   weight     DECIMAL(5,2)   DEFAULT 70,
   height     DECIMAL(5,2)   DEFAULT 170,
@@ -28,19 +28,19 @@ CREATE TABLE IF NOT EXISTS profiles (
 
 -- 3. GOALS  (1 row per user)
 CREATE TABLE IF NOT EXISTS goals (
-  id        SERIAL PRIMARY KEY,
-  user_id   INTEGER REFERENCES users(id) ON DELETE CASCADE UNIQUE,
-  calories  INTEGER DEFAULT 2000,
-  protein   INTEGER DEFAULT 120,
-  water     INTEGER DEFAULT 8,
-  workouts  INTEGER DEFAULT 5,
+  id         SERIAL PRIMARY KEY,
+  user_id    UUID REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+  calories   INTEGER DEFAULT 2000,
+  protein    INTEGER DEFAULT 120,
+  water      INTEGER DEFAULT 8,
+  workouts   INTEGER DEFAULT 5,
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- 4. DAILY STATS  (1 row per user per day)
 CREATE TABLE IF NOT EXISTS daily_stats (
   id                 SERIAL PRIMARY KEY,
-  user_id            INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  user_id            UUID REFERENCES users(id) ON DELETE CASCADE,
   date               DATE    DEFAULT CURRENT_DATE,
   calories_consumed  INTEGER DEFAULT 0,
   protein_consumed   INTEGER DEFAULT 0,
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS daily_stats (
 -- 5. MEAL LOGS
 CREATE TABLE IF NOT EXISTS meal_logs (
   id         SERIAL PRIMARY KEY,
-  user_id    INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  user_id    UUID REFERENCES users(id) ON DELETE CASCADE,
   date       DATE          DEFAULT CURRENT_DATE,
   meal_type  VARCHAR(20)   CHECK (meal_type IN ('Breakfast','Lunch','Dinner','Snacks')),
   food_name  VARCHAR(150)  NOT NULL,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS meal_logs (
 -- 6. WORKOUT LOGS
 CREATE TABLE IF NOT EXISTS workout_logs (
   id            SERIAL PRIMARY KEY,
-  user_id       INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  user_id       UUID REFERENCES users(id) ON DELETE CASCADE,
   muscle_group  VARCHAR(30) NOT NULL,
   exercise_id   INTEGER     NOT NULL,
   done          BOOLEAN     DEFAULT FALSE,

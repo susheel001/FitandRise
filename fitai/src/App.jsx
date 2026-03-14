@@ -1,20 +1,21 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import AppProvider    from './context/AppProvider';
-import ProtectedRoute from './components/ProtectedRoute';
+import AppProvider     from './context/AppProvider';
+import ProtectedRoute  from './components/ProtectedRoute';
+import PublicRoute     from './components/PublicRoute';     {/* ← new */}
 import DashboardLayout from './layout/DashboardLayout';
-import Landing        from './pages/Landing';
-import Dashboard      from './pages/Dashboard';
-import Workouts       from './pages/Workouts';
-import Nutrition      from './pages/Nutrition';
-import Progress       from './pages/Progress';
-import BMITools       from './pages/BMITools';
-import Profile        from './pages/Profile';
-import Settings       from './pages/Settings';
-import Login          from './pages/Login';
-import Signup         from './pages/Signup';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword  from './pages/ResetPassword';   {/* ← new */}
-import NotFound       from './pages/NotFound';
+import Landing         from './pages/Landing';
+import Dashboard       from './pages/Dashboard';
+import Workouts        from './pages/Workouts';
+import Nutrition       from './pages/Nutrition';
+import Progress        from './pages/Progress';
+import BMITools        from './pages/BMITools';
+import Profile         from './pages/Profile';
+import Settings        from './pages/Settings';
+import Login           from './pages/Login';
+import Signup          from './pages/Signup';
+import ForgotPassword  from './pages/ForgotPassword';
+import ResetPassword   from './pages/ResetPassword';
+import NotFound        from './pages/NotFound';
 
 const Wrap = ({ page }) => (
   <ProtectedRoute>
@@ -27,13 +28,13 @@ export default function App() {
     <AppProvider>
       <Router>
         <Routes>
-          {/* Public routes */}
-          <Route path="/"                element={<Landing />} />
-          <Route path="/landing"         element={<Landing />} />
-          <Route path="/login"           element={<Login />} />
-          <Route path="/signup"          element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password"  element={<ResetPassword />} />  {/* ← new */}
+          {/* Public routes — redirect to /dashboard if already logged in */}
+          <Route path="/"                element={<PublicRoute><Landing /></PublicRoute>} />
+          <Route path="/landing"         element={<PublicRoute><Landing /></PublicRoute>} />
+          <Route path="/login"           element={<PublicRoute><Login /></PublicRoute>} />
+          <Route path="/signup"          element={<PublicRoute><Signup /></PublicRoute>} />
+          <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+          <Route path="/reset-password"  element={<ResetPassword />} /> {/* No PublicRoute — needs session from email link */}
 
           {/* Protected routes */}
           <Route path="/dashboard" element={<Wrap page={<Dashboard />} />} />

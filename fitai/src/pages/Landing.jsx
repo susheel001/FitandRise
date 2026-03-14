@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 // ── ANIMATED COUNTER ──────────────────────────────────────────
 function Counter({ target, suffix = '' }) {

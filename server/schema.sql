@@ -13,6 +13,10 @@ DROP TABLE IF EXISTS goals        CASCADE;
 DROP TABLE IF EXISTS profiles     CASCADE;
 DROP TABLE IF EXISTS users        CASCADE;
 
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public';
+
 CREATE TABLE IF NOT EXISTS users (
   id         UUID PRIMARY KEY,
   name       VARCHAR(100)        NOT NULL,

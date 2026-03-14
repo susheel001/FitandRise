@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import AppProvider from './context/AppProvider';
+import AppProvider    from './context/AppProvider';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './layout/DashboardLayout';
 import Landing        from './pages/Landing';
@@ -13,6 +13,7 @@ import Settings       from './pages/Settings';
 import Login          from './pages/Login';
 import Signup         from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword  from './pages/ResetPassword';   {/* ← new */}
 import NotFound       from './pages/NotFound';
 
 const Wrap = ({ page }) => (
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/login"           element={<Login />} />
           <Route path="/signup"          element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password"  element={<ResetPassword />} />  {/* ← new */}
 
           {/* Protected routes */}
           <Route path="/dashboard" element={<Wrap page={<Dashboard />} />} />

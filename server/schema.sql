@@ -5,6 +5,14 @@
 
 -- 1. USERS
 -- No password column — Supabase Auth handles authentication
+
+DROP TABLE IF EXISTS workout_logs CASCADE;
+DROP TABLE IF EXISTS meal_logs    CASCADE;
+DROP TABLE IF EXISTS daily_stats  CASCADE;
+DROP TABLE IF EXISTS goals        CASCADE;
+DROP TABLE IF EXISTS profiles     CASCADE;
+DROP TABLE IF EXISTS users        CASCADE;
+
 CREATE TABLE IF NOT EXISTS users (
   id         UUID PRIMARY KEY,
   name       VARCHAR(100)        NOT NULL,

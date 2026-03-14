@@ -6,6 +6,8 @@ const rateLimit = require('express-rate-limit');
 const pool      = require('./db');
 
 const app = express();
+app.set("trust proxy", 1);
+
 
 // ── CORS ───────────────────────────────────────────────────────
 const allowedOrigins = [

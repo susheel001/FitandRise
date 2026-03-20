@@ -4,6 +4,8 @@ import Icon from '@mdi/react';
 import { mdiMagnify, mdiPlus, mdiClose, mdiFoodOutline, mdiRobot, mdiStar, mdiLock } from '@mdi/js';
 import { aiAPI } from '../api/api';
 
+const FREE_LIMIT = 6; // ← must match backend
+
 const foods = [
   { name: 'Chicken Breast', calories: 165, protein: 31, carbs: 0,  fat: 4,  img: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=60&auto=format&fit=crop' },
   { name: 'Paneer (100g)',   calories: 265, protein: 18, carbs: 3,  fat: 20, img: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=60&auto=format&fit=crop' },
@@ -23,32 +25,32 @@ const meals = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
 
 export default function Nutrition() {
   const { state, addMeal, removeMeal } = useApp();
-  const { darkMode: dm, mealLog, stats, goals } = state;
+  const { darkMode: dm, mealLog, goals } = state;
 
-  const [activeMeal, setActiveMeal]         = useState('Breakfast');
-  const [search, setSearch]                 = useState('');
-  const [showSearch, setShowSearch]         = useState(false);
-  const [showAI, setShowAI]                 = useState(false);
-  const [aiLoading, setAiLoading]           = useState(false);
-  const [aiSuggestions, setAiSuggestions]   = useState([]);
-  const [aiError, setAiError]               = useState('');
-  const [aiMeta, setAiMeta]                 = useState(null); // { requests_used, limit, requests_left, is_premium }
-  const [limitReached, setLimitReached]     = useState(false);
+  const [activeMeal, setActiveMeal]       = useState('Breakfast');
+  const [search, setSearch]               = useState('');
+  const [showSearch, setShowSearch]       = useState(false);
+  const [showAI, setShowAI]               = useState(false);
+  const [aiLoading, setAiLoading]         = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [aiError, setAiError]             = useState('');
+  const [aiMeta, setAiMeta]               = useState(null);
+  const [limitReached, setLimitReached]   = useState(false);
 
-  const filtered   = foods.filter(f => f.name.toLowerCase().includes(search.toLowerCase()));
-  const allFoods   = Object.values(mealLog).flat();
-  const totals     = {
+  const filtered = foods.filter(f => f.name.toLowerCase().includes(search.toLowerCase()));
+  const allFoods = Object.values(mealLog).flat();
+  const totals   = {
     cal:   allFoods.reduce((a, f) => a + (f.calories || 0), 0),
     pro:   allFoods.reduce((a, f) => a + (f.protein  || 0), 0),
     carbs: allFoods.reduce((a, f) => a + (f.carbs    || 0), 0),
     fat:   allFoods.reduce((a, f) => a + (f.fat      || 0), 0),
   };
 
-  const textMain  = dm ? 'text-white'      : 'text-gray-800';
-  const textMuted = dm ? 'text-gray-400'   : 'text-gray-500';
+  const textMain  = dm ? 'text-white'    : 'text-gray-800';
+  const textMuted = dm ? 'text-gray-400' : 'text-gray-500';
   const card      = `rounded-2xl border p-4 ${dm ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-sm'}`;
 
-  // ── AI Suggest ───────────────────────────────────────────────
+  // ── AI Suggest ─────────────────────────────────────────────
   const handleAISuggest = async () => {
     setAiError('');
     setAiSuggestions([]);
@@ -59,7 +61,7 @@ export default function Nutrition() {
     try {
       const data = await aiAPI.suggest({
         meal_type:     activeMeal,
-        goal:          goals?.goal || state.profile?.goal || 'General Fitness',
+        goal:          state.profile?.goal || 'General Fitness',
         calories_left: Math.max(0, (goals.calories || 2000) - totals.cal),
         protein_left:  Math.max(0, (goals.protein  || 120)  - totals.pro),
       });
@@ -72,11 +74,12 @@ export default function Nutrition() {
         is_premium:    data.is_premium,
       });
     } catch (err) {
-      if (err.message?.includes('limit_reached') || err.message?.includes('free AI')) {
+      console.log('AI Error:', err.message, err.data);
+      if (err.data?.error === 'limit_reached') {
         setLimitReached(true);
-        setAiError(err.message);
+        setAiError(err.data?.message || 'Daily limit reached!');
       } else {
-        setAiError('Failed to get AI suggestions. Try again!');
+        setAiError(`Error: ${err.message || 'Failed to get AI suggestions. Try again!'}`);
       }
     } finally {
       setAiLoading(false);
@@ -90,8 +93,6 @@ export default function Nutrition() {
           <h2 className={`text-xl sm:text-2xl font-black ${textMain}`}>Nutrition</h2>
           <p className={`text-xs sm:text-sm ${textMuted}`}>Track your daily food intake</p>
         </div>
-
-        {/* AI Suggest Button */}
         <button onClick={handleAISuggest}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-white text-xs transition-all hover:opacity-90 hover:scale-105 shadow-lg"
           style={{ background: 'linear-gradient(135deg,#a855f7,#3b82f6)' }}>
@@ -120,10 +121,11 @@ export default function Nutrition() {
 
       {/* ── AI Panel ── */}
       {showAI && (
-        <div className={`${card} border-purple-500/30`} style={{ borderColor: 'rgba(168,85,247,0.3)', background: dm ? 'rgba(168,85,247,0.08)' : 'rgba(168,85,247,0.04)' }}>
+        <div className={`${card}`} style={{ borderColor: 'rgba(168,85,247,0.3)', background: dm ? 'rgba(168,85,247,0.08)' : 'rgba(168,85,247,0.04)' }}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#a855f7,#3b82f6)' }}>
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg,#a855f7,#3b82f6)' }}>
                 <Icon path={mdiRobot} size={0.55} color="white" />
               </div>
               <p className={`font-black text-sm ${textMain}`}>AI Meal Suggestions</p>
@@ -173,7 +175,8 @@ export default function Nutrition() {
 
           {/* Error */}
           {aiError && !limitReached && !aiLoading && (
-            <div className="px-4 py-3 rounded-xl text-sm text-red-300" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+            <div className="px-4 py-3 rounded-xl text-sm text-red-300"
+              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
               {aiError}
             </div>
           )}
@@ -185,7 +188,8 @@ export default function Nutrition() {
                 Suggested for {activeMeal}
               </p>
               {aiSuggestions.map((s, i) => (
-                <div key={i} className={`flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer hover:scale-[1.01] ${dm ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:shadow-md border border-gray-100'}`}
+                <div key={i}
+                  className={`flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer hover:scale-[1.01] ${dm ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:shadow-md border border-gray-100'}`}
                   onClick={() => {
                     addMeal(activeMeal, { name: s.name, calories: s.calories, protein: s.protein, carbs: s.carbs, fat: s.fat, img: '' });
                     setShowAI(false);
@@ -226,7 +230,7 @@ export default function Nutrition() {
         {meals.map(m => (
           <button key={m} onClick={() => setActiveMeal(m)}
             className={`px-3 py-2 rounded-xl font-semibold text-xs whitespace-nowrap shrink-0 transition-all ${activeMeal === m ? 'bg-blue-500 text-white shadow-md' : dm ? 'bg-gray-800 text-gray-400 border border-gray-700' : 'bg-white text-gray-500 border border-gray-200'}`}>
-            {m} {(mealLog[m]?.length || 0) > 0 && <span className={`ml-1 text-xs px-1 rounded-full ${activeMeal===m?'bg-white/30':'bg-blue-100 text-blue-600'}`}>{mealLog[m].length}</span>}
+            {m} {(mealLog[m]?.length || 0) > 0 && <span className={`ml-1 text-xs px-1 rounded-full ${activeMeal === m ? 'bg-white/30' : 'bg-blue-100 text-blue-600'}`}>{mealLog[m].length}</span>}
           </button>
         ))}
       </div>
@@ -245,7 +249,9 @@ export default function Nutrition() {
         {showSearch && (
           <div className="mb-3">
             <div className="relative mb-2">
-              <div className={`absolute left-3 top-1/2 -translate-y-1/2 ${textMuted}`}><Icon path={mdiMagnify} size={0.7} /></div>
+              <div className={`absolute left-3 top-1/2 -translate-y-1/2 ${textMuted}`}>
+                <Icon path={mdiMagnify} size={0.7} />
+              </div>
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search food..."
                 className={`w-full pl-9 pr-4 py-2.5 rounded-xl border-2 text-sm focus:outline-none focus:border-blue-400 transition ${dm ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-200'}`} />
             </div>
@@ -279,7 +285,8 @@ export default function Nutrition() {
         ) : (mealLog[activeMeal] || []).map((food, i) => (
           <div key={i} className={`flex items-center justify-between p-2.5 sm:p-3 rounded-xl ${dm ? 'bg-gray-700' : 'bg-gray-50'}`}>
             <div className="flex items-center gap-2 sm:gap-3">
-              <img src={food.img || food.img_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=60&auto=format&fit=crop'} alt={food.name} className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover shrink-0" />
+              <img src={food.img || food.img_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=60&auto=format&fit=crop'}
+                alt={food.name} className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover shrink-0" />
               <div>
                 <p className={`font-semibold text-xs sm:text-sm ${textMain}`}>{food.name || food.food_name}</p>
                 <p className={`text-xs ${textMuted}`}>{food.protein}g P · {food.carbs}g C · {food.fat}g F</p>

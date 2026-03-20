@@ -22,7 +22,11 @@ const headers = async (includeAuth = true) => {
 // ── HANDLE FETCH RESPONSE ──────────────────────────────────────
 const handle = async (res) => {
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Request failed');
+  if (!res.ok) {
+    const err = new Error(data.message || data.error || 'Request failed');
+    err.data = data; // ← attach full backend response
+    throw err;
+  }
   return data;
 };
 

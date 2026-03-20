@@ -4,12 +4,9 @@ const cors      = require('cors');
 const helmet    = require('helmet');
 const rateLimit = require('express-rate-limit');
 const pool      = require('./db');
-const aiRoutes = require('./routes/ai');
-app.use('/api/ai', aiRoutes);
 
 const app = express();
 app.set("trust proxy", 1);
-
 
 // ── CORS ───────────────────────────────────────────────────────
 const allowedOrigins = [
@@ -19,18 +16,14 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    // Allow main production URL
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    // Allow ALL Vercel preview URLs for this project
     if (origin.endsWith('.vercel.app')) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
 }));
 
-// handle preflight requests
 app.options('*', cors());
 
 // ── SECURITY & MIDDLEWARE ─────────────────────────────────────
@@ -62,6 +55,7 @@ app.use('/api/profile',  require('./routes/profile'));
 app.use('/api/stats',    require('./routes/stats'));
 app.use('/api/meals',    require('./routes/meals'));
 app.use('/api/workouts', require('./routes/workouts'));
+app.use('/api/ai',       require('./routes/ai'));       // ← fixed position
 
 // ── 404 HANDLER ──────────────────────────────────────────────
 app.use((req, res) => {

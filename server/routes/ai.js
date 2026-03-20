@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const router = require('express').Router();
 const pool   = require('../db');
 const auth   = require('../middleware/auth');

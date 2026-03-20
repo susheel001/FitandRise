@@ -85,3 +85,15 @@ export const workoutsAPI = {
     return fetch(`${BASE}/workouts/toggle`, { method: 'POST', headers: h, body: JSON.stringify(body) }).then(handle);
   },
 };
+
+// ── AI API ─────────────────────────────────────────────────────
+export const aiAPI = {
+  suggest: async (body) => {
+    const h = await headers();
+    return fetch(`${BASE}/ai/suggest`, {
+      method: 'POST',
+      headers: h,
+      body: JSON.stringify(body),
+    }).then(handle);
+  },
+};

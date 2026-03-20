@@ -4,6 +4,8 @@ const cors      = require('cors');
 const helmet    = require('helmet');
 const rateLimit = require('express-rate-limit');
 const pool      = require('./db');
+const aiRoutes = require('./routes/ai');
+app.use('/api/ai', aiRoutes);
 
 const app = express();
 app.set("trust proxy", 1);

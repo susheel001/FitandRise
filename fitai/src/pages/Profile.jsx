@@ -3,22 +3,49 @@ import { useApp } from '../context/useApp';
 import Icon from '@mdi/react';
 import { mdiPencil, mdiCheck, mdiClose } from '@mdi/js';
 
-// ✅ Force number helper
-const toNum = (v) => parseFloat(v) || 0;
-
 export default function Profile() {
   const { state, updateProfile } = useApp();
   const { darkMode: dm, profile } = state;
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState(profile);
 
-  const save   = () => { updateProfile(form); setEditing(false); };
-  const cancel = () => { setForm(profile); setEditing(false); };
+  // ✅ Store as-is while typing, convert on save
+  const [form, setForm] = useState({
+    name:   profile.name   || 'User',
+    age:    profile.age    || 25,
+    weight: profile.weight || 70,
+    height: profile.height || 170,
+    goal:   profile.goal   || 'General Fitness',
+    level:  profile.level  || 'Beginner',
+    gender: profile.gender || 'Male',
+  });
 
-  // ✅ Fixed — force numbers before calculation
-  const weight = toNum(profile.weight);
-  const height = toNum(profile.height);
-  const bmi    = height > 0 ? (weight / ((height / 100) ** 2)).toFixed(1) : '0.0';
+  // ✅ Only convert to number on save
+  const save = () => {
+    updateProfile({
+      ...form,
+      age:    parseInt(form.age)      || 25,
+      weight: parseFloat(form.weight) || 70,
+      height: parseFloat(form.height) || 170,
+    });
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setForm({
+      name:   profile.name,
+      age:    profile.age,
+      weight: profile.weight,
+      height: profile.height,
+      goal:   profile.goal,
+      level:  profile.level,
+      gender: profile.gender,
+    });
+    setEditing(false);
+  };
+
+  const weight = parseFloat(profile.weight) || 70;
+  const height = parseFloat(profile.height) || 170;
+  const bmi    = (weight / ((height / 100) ** 2)).toFixed(1);
 
   const bmiLabel = bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Overweight' : 'Obese';
   const bmiColor = bmi < 18.5 ? 'text-blue-500' : bmi < 25 ? 'text-green-500' : bmi < 30 ? 'text-yellow-500' : 'text-red-500';
@@ -61,11 +88,11 @@ export default function Profile() {
           <p className={`text-sm ${textMuted} mb-3`}>{profile.goal} · {profile.level}</p>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {[
-              { label: 'BMI',    value: bmi,               extra: <span className={`text-xs font-bold ${bmiColor}`}>{bmiLabel}</span> },
-              { label: 'Weight', value: `${toNum(profile.weight)}kg` },
-              { label: 'Height', value: `${toNum(profile.height)}cm` },
-              { label: 'Age',    value: `${toNum(profile.age)}yr`    },
-              { label: 'Gender', value: profile.gender               },
+              { label: 'BMI',    value: bmi,                         extra: <span className={`text-xs font-bold ${bmiColor}`}>{bmiLabel}</span> },
+              { label: 'Weight', value: `${parseFloat(profile.weight) || 70}kg`   },
+              { label: 'Height', value: `${parseFloat(profile.height) || 170}cm`  },
+              { label: 'Age',    value: `${parseInt(profile.age)     || 25}yr`    },
+              { label: 'Gender', value: profile.gender || 'Male'                  },
             ].map((item, i) => (
               <div key={i} className={`flex flex-col items-center p-2 rounded-xl ${dm ? 'bg-gray-700' : 'bg-gray-50'}`}>
                 <span className={`text-xs ${textMuted}`}>{item.label}</span>
@@ -82,17 +109,20 @@ export default function Profile() {
         <p className={`font-bold mb-3 text-sm ${textMain}`}>Personal Details</p>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: 'Full Name',    key: 'name',   type: 'text',   span: true },
-            { label: 'Age',          key: 'age',    type: 'number'             },
-            { label: 'Weight (kg)',  key: 'weight', type: 'number'             },
-            { label: 'Height (cm)',  key: 'height', type: 'number'             },
+            { label: 'Full Name',   key: 'name',   type: 'text',   span: true },
+            { label: 'Age',         key: 'age',    type: 'number'             },
+            { label: 'Weight (kg)', key: 'weight', type: 'number'             },
+            { label: 'Height (cm)', key: 'height', type: 'number'             },
           ].map(f => (
             <div key={f.key} className={f.span ? 'col-span-2' : ''}>
               <label className={`text-xs font-semibold block mb-1 ${textMuted}`}>{f.label}</label>
               {editing
-                ? <input type={f.type} value={form[f.key]}
-                    onChange={e => setForm(p => ({ ...p, [f.key]: f.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value }))}
-                    className={input} />
+                ? <input
+                    type={f.type}
+                    value={form[f.key]}
+                    onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
+                    className={input}
+                  />
                 : <div className={val}>{profile[f.key]}</div>
               }
             </div>

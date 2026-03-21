@@ -8,23 +8,28 @@ import {
   mdiAlertCircle, mdiFood, mdiWater, mdiDumbbell,
 } from '@mdi/js';
 
-// ✅ Force number helper
-const toNum = (v) => parseInt(v) || 0;
-
 export default function Settings() {
   const { state, updateGoals, toggleDarkMode } = useApp();
   const { darkMode: dm, goals } = state;
   const { prefs, permission, requestPermission, updatePrefs } = useNotifications();
+
+  // ✅ Store as strings while typing, convert on save
   const [localGoals, setLocalGoals] = useState({
-    calories: toNum(goals.calories),
-    protein:  toNum(goals.protein),
-    water:    toNum(goals.water),
-    workouts: toNum(goals.workouts),
+    calories: goals.calories || 2000,
+    protein:  goals.protein  || 120,
+    water:    goals.water    || 8,
+    workouts: goals.workouts || 5,
   });
   const [saved, setSaved] = useState(false);
 
   const save = () => {
-    updateGoals(localGoals);
+    // ✅ Only convert to number on save
+    updateGoals({
+      calories: parseInt(localGoals.calories) || 2000,
+      protein:  parseInt(localGoals.protein)  || 120,
+      water:    parseInt(localGoals.water)    || 8,
+      workouts: parseInt(localGoals.workouts) || 5,
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -145,7 +150,7 @@ export default function Settings() {
               <input
                 type="number"
                 value={localGoals[g.key]}
-                onChange={e => setLocalGoals(p => ({ ...p, [g.key]: toNum(e.target.value) }))}
+                onChange={e => setLocalGoals(p => ({ ...p, [g.key]: e.target.value }))}
                 className={input}
               />
             </div>

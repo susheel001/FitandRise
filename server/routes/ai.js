@@ -159,7 +159,6 @@ router.post('/scan-food', auth, async (req, res) => {
     const { image } = req.body;
     if (!image) return res.status(400).json({ error: 'No image provided' });
 
-    // Check image size — max 4MB base64
     if (image.length > 5 * 1024 * 1024) {
       return res.status(400).json({ error: 'Image too large. Please try again.' });
     }
@@ -167,7 +166,7 @@ router.post('/scan-food', auth, async (req, res) => {
     console.log('Scanning food image, size:', image.length);
 
     const result = await fetchGroq({
-      model:      'llama-4-scout-17b-16e-instruct',
+      model:      'llama-3.2-11b-vision-preview',   // ← fixed model
       max_tokens: 400,
       messages: [
         {

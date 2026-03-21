@@ -35,13 +35,13 @@ export default function Landing() {
   const [lightbox,     setLightbox]     = useState(null);
 
   const screens = [
-    { src: '/fitandrise1.png', label: 'Dashboard',      accent: '#3b82f6' },
-    { src: '/fitandrise2.png', label: 'Workouts',        accent: '#ef4444' },
-    { src: '/fitandrise3.png', label: 'AI Nutrition',    accent: '#22c55e' },
-    { src: '/fitandrise4.png', label: 'Progress',        accent: '#f97316' },
-    { src: '/fitandrise5.png', label: 'BMI & Tools',     accent: '#a855f7' },
-    { src: '/fitandrise6.png', label: 'AI Suggestions',  accent: '#a855f7' },
-    { src: '/fitandrise7.png', label: 'Food Scanner',    accent: '#06b6d4' },
+    { src: '/fitandrise1.png', label: 'Dashboard',     accent: '#3b82f6' },
+    { src: '/fitandrise2.png', label: 'Workouts',       accent: '#ef4444' },
+    { src: '/fitandrise3.png', label: 'AI Nutrition',   accent: '#22c55e' },
+    { src: '/fitandrise4.png', label: 'Progress',       accent: '#f97316' },
+    { src: '/fitandrise5.png', label: 'BMI & Tools',    accent: '#a855f7' },
+    { src: '/fitandrise6.png', label: 'AI Suggestions', accent: '#a855f7' },
+    { src: '/fitandrise7.png', label: 'Food Scanner',   accent: '#06b6d4' },
   ];
 
   useEffect(() => {
@@ -73,10 +73,10 @@ export default function Landing() {
   ];
 
   const stats = [
-    { value: 8,   suffix: '',  label: 'Core Features'  },
-    { value: 10,  suffix: '+', label: 'Muscle Groups'  },
+    { value: 8,  suffix: '',  label: 'Core Features'   },
+    { value: 10, suffix: '+', label: 'Muscle Groups'   },
     { value: 100, suffix: '+', label: 'Exercises'      },
-    { value: 100, suffix: '%', label: 'Free to Use'    },
+    { value: 2,  suffix: '$', label: 'Premium/month'   },
   ];
 
   const steps = [
@@ -197,10 +197,7 @@ export default function Landing() {
               style={{ background: 'linear-gradient(135deg,#eff6ff,#f0fdf4)' }}>
               <img
                 src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&auto=format&fit=crop&q=80"
-                alt="Athlete"
-                className="w-full h-80 object-cover object-top"
-              />
-              {/* Floating AI card */}
+                alt="Athlete" className="w-full h-80 object-cover object-top" />
               <div className="absolute bottom-4 left-4 right-4 rounded-2xl p-4 shadow-xl"
                 style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(20px)' }}>
                 <div className="flex items-center gap-3 mb-2">
@@ -223,9 +220,10 @@ export default function Landing() {
                 </div>
               </div>
             </div>
+            {/* ✅ Fixed badge */}
             <div className="absolute -top-3 -right-3 bg-white rounded-2xl px-4 py-3 shadow-lg border border-gray-100">
-              <p className="text-2xl font-black text-blue-500">100%</p>
-              <p className="text-gray-400 text-xs font-semibold">Free Forever</p>
+              <p className="text-2xl font-black text-blue-500">Free</p>
+              <p className="text-gray-400 text-xs font-semibold">+ Premium</p>
             </div>
             <div className="absolute -bottom-3 -left-3 bg-white rounded-2xl px-4 py-3 shadow-lg border border-gray-100 flex items-center gap-2">
               <Icon path={mdiRobot} size={0.8} color="#a855f7" />
@@ -352,11 +350,11 @@ export default function Landing() {
 
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
             {[
-              { src: '/fitandrise2.png', label: 'Workouts',      accent: '#ef4444' },
-              { src: '/fitandrise6.png', label: 'AI Nutrition',  accent: '#a855f7' },
-              { src: '/fitandrise4.png', label: 'Progress',      accent: '#f97316' },
-              { src: '/fitandrise5.png', label: 'BMI Tools',     accent: '#f59e0b' },
-              { src: '/fitandrise7.png', label: 'Food Scanner',  accent: '#06b6d4' },
+              { src: '/fitandrise2.png', label: 'Workouts',     accent: '#ef4444' },
+              { src: '/fitandrise6.png', label: 'AI Nutrition', accent: '#a855f7' },
+              { src: '/fitandrise4.png', label: 'Progress',     accent: '#f97316' },
+              { src: '/fitandrise5.png', label: 'BMI Tools',    accent: '#f59e0b' },
+              { src: '/fitandrise7.png', label: 'Food Scanner', accent: '#06b6d4' },
             ].map((s, i) => (
               <div key={i} className="group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-xl border border-gray-200"
                 onClick={() => setLightbox(s.src)}>
@@ -411,9 +409,9 @@ export default function Landing() {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {[
-              { img: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&auto=format&fit=crop&q=80', title: 'Track Every Workout',  desc: 'Log 100+ exercises across 10+ muscle groups. Build consistency and never miss a session.', color: '#3b82f6', tag: 'Workout Tracker', icon: mdiDumbbell },
-              { img: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&auto=format&fit=crop&q=80', title: 'Fuel Your Body Right',  desc: 'Use AI to scan food or get meal suggestions tailored to your exact calorie and protein goals.', color: '#22c55e', tag: 'AI Nutrition',    icon: mdiRobot    },
-              { img: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=600&auto=format&fit=crop&q=80', title: 'See Your Progress',     desc: 'Beautiful weekly charts show your calorie and protein trends so you can celebrate every win.', color: '#f97316', tag: 'Progress Charts', icon: mdiChartBar },
+              { img: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&auto=format&fit=crop&q=80', title: 'Track Every Workout',  desc: 'Log 100+ exercises across 10+ muscle groups. Build consistency and never miss a session.',              color: '#3b82f6', tag: 'Workout Tracker', icon: mdiDumbbell },
+              { img: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&auto=format&fit=crop&q=80', title: 'Fuel Your Body Right',  desc: 'Use AI to scan food or get meal suggestions tailored to your exact calorie and protein goals.',          color: '#22c55e', tag: 'AI Nutrition',    icon: mdiRobot    },
+              { img: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=600&auto=format&fit=crop&q=80', title: 'See Your Progress',       desc: 'Beautiful weekly charts show your calorie and protein trends so you can celebrate every win.',           color: '#f97316', tag: 'Progress Charts', icon: mdiChartBar },
             ].map((a, i) => (
               <div key={i} className="rounded-3xl overflow-hidden shadow-lg border border-gray-100 group hover:-translate-y-1 transition-all duration-300">
                 <div className="relative h-52 overflow-hidden">
@@ -500,9 +498,7 @@ export default function Landing() {
             <div className="relative h-64 overflow-hidden">
               <img
                 src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&auto=format&fit=crop&q=80"
-                alt="Fitness"
-                className="w-full h-full object-cover"
-              />
+                alt="Fitness" className="w-full h-full object-cover" />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
                 style={{ background: 'linear-gradient(135deg,rgba(59,130,246,0.85),rgba(34,197,94,0.85))' }}>
                 <img src="/fitandrise.jpeg" alt="FitandRise" className="w-12 h-12 rounded-xl object-cover mb-4 shadow-lg" />
@@ -519,7 +515,7 @@ export default function Landing() {
                   <Icon path={mdiCamera} size={0.5} color="#06b6d4" /> Food Scanner
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-600 border border-green-100 flex items-center gap-1">
-                  <Icon path={mdiCheckCircle} size={0.5} color="#22c55e" /> 100% Free
+                  <Icon path={mdiCheckCircle} size={0.5} color="#22c55e" /> Free + Premium
                 </span>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">

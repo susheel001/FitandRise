@@ -4,15 +4,23 @@ import { useNotifications } from '../hooks/useNotifications';
 import Icon from '@mdi/react';
 import {
   mdiWeatherNight, mdiWeatherSunny, mdiTargetAccount,
-  mdiContentSave, mdiBell, mdiBellOff, mdiCheckCircle,
+  mdiContentSave, mdiBell, mdiCheckCircle,
   mdiAlertCircle, mdiFood, mdiWater, mdiDumbbell,
 } from '@mdi/js';
+
+// ✅ Force number helper
+const toNum = (v) => parseInt(v) || 0;
 
 export default function Settings() {
   const { state, updateGoals, toggleDarkMode } = useApp();
   const { darkMode: dm, goals } = state;
   const { prefs, permission, requestPermission, updatePrefs } = useNotifications();
-  const [localGoals, setLocalGoals] = useState(goals);
+  const [localGoals, setLocalGoals] = useState({
+    calories: toNum(goals.calories),
+    protein:  toNum(goals.protein),
+    water:    toNum(goals.water),
+    workouts: toNum(goals.workouts),
+  });
   const [saved, setSaved] = useState(false);
 
   const save = () => {
@@ -70,8 +78,7 @@ export default function Settings() {
         </div>
 
         {permission === 'denied' && (
-          <div className="mb-3 px-3 py-2 rounded-xl flex items-center gap-2"
-            style={{ background: 'rgba(239,68,68,0.1)' }}>
+          <div className="mb-3 px-3 py-2 rounded-xl flex items-center gap-2" style={{ background: 'rgba(239,68,68,0.1)' }}>
             <Icon path={mdiAlertCircle} size={0.7} color="#f87171" />
             <p className="text-xs font-semibold text-red-400">Notifications blocked. Enable them in browser settings.</p>
           </div>
@@ -87,8 +94,7 @@ export default function Settings() {
         )}
 
         {permission === 'granted' && (
-          <div className="mb-3 px-3 py-2 rounded-xl flex items-center gap-2"
-            style={{ background: 'rgba(34,197,94,0.1)' }}>
+          <div className="mb-3 px-3 py-2 rounded-xl flex items-center gap-2" style={{ background: 'rgba(34,197,94,0.1)' }}>
             <Icon path={mdiCheckCircle} size={0.7} color="#4ade80" />
             <p className="text-xs font-semibold text-green-400">Browser notifications enabled</p>
           </div>
@@ -102,8 +108,7 @@ export default function Settings() {
           ].map(({ label, sub, key, icon, color }) => (
             <div key={key} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ background: `${color}22` }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${color}22` }}>
                   <Icon path={icon} size={0.65} color={color} />
                 </div>
                 <div>
@@ -137,9 +142,12 @@ export default function Settings() {
           ].map(g => (
             <div key={g.key}>
               <label className={`text-xs font-semibold mb-1.5 block ${textMuted}`}>{g.label}</label>
-              <input type="number" value={localGoals[g.key]}
-                onChange={e => setLocalGoals(p => ({ ...p, [g.key]: parseInt(e.target.value) || 0 }))}
-                className={input} />
+              <input
+                type="number"
+                value={localGoals[g.key]}
+                onChange={e => setLocalGoals(p => ({ ...p, [g.key]: toNum(e.target.value) }))}
+                className={input}
+              />
             </div>
           ))}
         </div>

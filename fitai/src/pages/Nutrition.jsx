@@ -1,10 +1,14 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/useApp';
 import Icon from '@mdi/react';
-import { mdiMagnify, mdiPlus, mdiClose, mdiFoodOutline, mdiRobot, mdiStar, mdiLock } from '@mdi/js';
+import {
+  mdiMagnify, mdiPlus, mdiClose, mdiFoodOutline,
+  mdiRobot, mdiStar, mdiLock, mdiReload, mdiCrown,
+} from '@mdi/js';
 import { aiAPI } from '../api/api';
 
-const FREE_LIMIT = 6; // ← must match backend
+const FREE_LIMIT = 6;
 
 const foods = [
   { name: 'Chicken Breast', calories: 165, protein: 31, carbs: 0,  fat: 4,  img: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=60&auto=format&fit=crop' },
@@ -23,9 +27,13 @@ const foods = [
 
 const meals = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
 
+// ── Force number helper ───────────────────────────────────────
+const toNum = (v) => parseFloat(v) || 0;
+
 export default function Nutrition() {
   const { state, addMeal, removeMeal } = useApp();
   const { darkMode: dm, mealLog, goals } = state;
+  const navigate = useNavigate();
 
   const [activeMeal, setActiveMeal]       = useState('Breakfast');
   const [search, setSearch]               = useState('');
@@ -39,18 +47,19 @@ export default function Nutrition() {
 
   const filtered = foods.filter(f => f.name.toLowerCase().includes(search.toLowerCase()));
   const allFoods = Object.values(mealLog).flat();
-  const totals   = {
-    cal:   allFoods.reduce((a, f) => a + (f.calories || 0), 0),
-    pro:   allFoods.reduce((a, f) => a + (f.protein  || 0), 0),
-    carbs: allFoods.reduce((a, f) => a + (f.carbs    || 0), 0),
-    fat:   allFoods.reduce((a, f) => a + (f.fat      || 0), 0),
+
+  // ✅ Fixed number formatting — force parseFloat to avoid concatenation
+  const totals = {
+    cal:   Math.round(allFoods.reduce((a, f) => a + toNum(f.calories), 0)),
+    pro:   Math.round(allFoods.reduce((a, f) => a + toNum(f.protein),  0)),
+    carbs: Math.round(allFoods.reduce((a, f) => a + toNum(f.carbs),    0)),
+    fat:   Math.round(allFoods.reduce((a, f) => a + toNum(f.fat),      0)),
   };
 
   const textMain  = dm ? 'text-white'    : 'text-gray-800';
   const textMuted = dm ? 'text-gray-400' : 'text-gray-500';
   const card      = `rounded-2xl border p-4 ${dm ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-sm'}`;
 
-  // ── AI Suggest ─────────────────────────────────────────────
   const handleAISuggest = async () => {
     setAiError('');
     setAiSuggestions([]);
@@ -96,7 +105,7 @@ export default function Nutrition() {
         <button onClick={handleAISuggest}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-white text-xs transition-all hover:opacity-90 hover:scale-105 shadow-lg"
           style={{ background: 'linear-gradient(135deg,#a855f7,#3b82f6)' }}>
-          <Icon path={mdiRobot} size={0.7} />
+          <Icon path={mdiRobot} size={0.7} color="white" />
           AI Suggest
         </button>
       </div>
@@ -111,9 +120,11 @@ export default function Nutrition() {
         ].map(m => (
           <div key={m.label} className={card}>
             <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${textMuted}`}>{m.label}</p>
-            <p className={`text-xl sm:text-2xl font-black ${m.color}`}>{m.val}<span className="text-xs text-gray-400 ml-1">{m.unit}</span></p>
+            <p className={`text-xl sm:text-2xl font-black ${m.color}`}>
+              {m.val}<span className="text-xs text-gray-400 ml-1">{m.unit}</span>
+            </p>
             <div className={`w-full h-1.5 rounded-full mt-1.5 overflow-hidden ${dm ? 'bg-gray-600' : 'bg-gray-100'}`}>
-              <div className="h-1.5 rounded-full transition-all" style={{ width: `${Math.min((m.val/m.max)*100,100)}%`, backgroundColor: m.bar }} />
+              <div className="h-1.5 rounded-full transition-all" style={{ width: `${Math.min((m.val / m.max) * 100, 100)}%`, backgroundColor: m.bar }} />
             </div>
           </div>
         ))}
@@ -138,7 +149,7 @@ export default function Nutrition() {
               {aiMeta?.is_premium && (
                 <span className="text-xs px-2 py-0.5 rounded-full font-bold flex items-center gap-1"
                   style={{ background: 'rgba(234,179,8,0.2)', color: '#fbbf24' }}>
-                  <Icon path={mdiStar} size={0.45} /> Premium
+                  <Icon path={mdiStar} size={0.45} color="#fbbf24" /> Premium
                 </span>
               )}
             </div>
@@ -163,12 +174,14 @@ export default function Nutrition() {
                 style={{ background: 'rgba(234,179,8,0.15)', border: '1px solid rgba(234,179,8,0.3)' }}>
                 <Icon path={mdiLock} size={1} color="#fbbf24" />
               </div>
-              <p className="text-white font-black text-base mb-1">Daily Limit Reached</p>
-              <p className={`text-sm ${textMuted} mb-4`}>You've used all {FREE_LIMIT} free AI suggestions for today.</p>
-              <div className="inline-block px-6 py-3 rounded-xl font-black text-white text-sm cursor-pointer hover:opacity-90 transition"
+              <p className={`font-black text-base mb-1 ${textMain}`}>Daily Limit Reached</p>
+              <p className={`text-sm mb-4 ${textMuted}`}>You've used all {FREE_LIMIT} free AI suggestions for today.</p>
+              <button onClick={() => navigate('/premium')}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-black text-white text-sm hover:opacity-90 transition"
                 style={{ background: 'linear-gradient(135deg,#f59e0b,#ef4444)' }}>
-                ⭐ Upgrade to Premium
-              </div>
+                <Icon path={mdiCrown} size={0.7} color="white" />
+                Upgrade to Premium
+              </button>
               <p className={`text-xs ${textMuted} mt-3`}>Resets tomorrow at midnight</p>
             </div>
           )}
@@ -196,9 +209,9 @@ export default function Nutrition() {
                     setAiSuggestions([]);
                   }}>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                       style={{ background: 'linear-gradient(135deg,rgba(168,85,247,0.2),rgba(59,130,246,0.2))' }}>
-                      🤖
+                      <Icon path={mdiRobot} size={0.7} color="#a855f7" />
                     </div>
                     <div>
                       <p className={`font-bold text-sm ${textMain}`}>{s.name}</p>
@@ -216,9 +229,10 @@ export default function Nutrition() {
                 </div>
               ))}
               <button onClick={handleAISuggest}
-                className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all hover:opacity-80 mt-2 ${textMuted}`}
+                className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all hover:opacity-80 mt-2 flex items-center justify-center gap-2 ${textMuted}`}
                 style={{ background: dm ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }}>
-                🔄 Regenerate suggestions
+                <Icon path={mdiReload} size={0.6} />
+                Regenerate suggestions
               </button>
             </div>
           )}
@@ -230,7 +244,11 @@ export default function Nutrition() {
         {meals.map(m => (
           <button key={m} onClick={() => setActiveMeal(m)}
             className={`px-3 py-2 rounded-xl font-semibold text-xs whitespace-nowrap shrink-0 transition-all ${activeMeal === m ? 'bg-blue-500 text-white shadow-md' : dm ? 'bg-gray-800 text-gray-400 border border-gray-700' : 'bg-white text-gray-500 border border-gray-200'}`}>
-            {m} {(mealLog[m]?.length || 0) > 0 && <span className={`ml-1 text-xs px-1 rounded-full ${activeMeal === m ? 'bg-white/30' : 'bg-blue-100 text-blue-600'}`}>{mealLog[m].length}</span>}
+            {m} {(mealLog[m]?.length || 0) > 0 && (
+              <span className={`ml-1 text-xs px-1 rounded-full ${activeMeal === m ? 'bg-white/30' : 'bg-blue-100 text-blue-600'}`}>
+                {mealLog[m].length}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -245,7 +263,6 @@ export default function Nutrition() {
           </button>
         </div>
 
-        {/* Search panel */}
         {showSearch && (
           <div className="mb-3">
             <div className="relative mb-2">
@@ -276,7 +293,6 @@ export default function Nutrition() {
           </div>
         )}
 
-        {/* Logged foods */}
         {(mealLog[activeMeal]?.length || 0) === 0 ? (
           <div className="flex flex-col items-center py-8">
             <Icon path={mdiFoodOutline} size={1.5} color={dm ? '#4b5563' : '#d1d5db'} />

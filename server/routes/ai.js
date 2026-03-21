@@ -1,10 +1,40 @@
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const https  = require('https');
 const router = require('express').Router();
 const pool   = require('../db');
 const auth   = require('../middleware/auth');
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const FREE_LIMIT   = 6;
+
+// ── Built-in HTTPS fetch (no external packages needed) ────────
+function fetchGroq(body, apiKey) {
+  return new Promise((resolve, reject) => {
+    const bodyStr = JSON.stringify(body);
+    const req = https.request({
+      hostname: 'api.groq.com',
+      path:     '/openai/v1/chat/completions',
+      method:   'POST',
+      headers: {
+        'Content-Type':   'application/json',
+        'Authorization':  `Bearer ${apiKey}`,
+        'Content-Length': Buffer.byteLength(bodyStr),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, data: JSON.parse(data) });
+        } catch (e) {
+          reject(new Error('Failed to parse Groq response: ' + data));
+        }
+      });
+    });
+    req.on('error', reject);
+    req.write(bodyStr);
+    req.end();
+  });
+}
 
 // ── CHECK & UPDATE request count ──────────────────────────────
 async function checkLimit(userId) {
@@ -46,19 +76,13 @@ router.post('/suggest', auth, async (req, res) => {
 
     const { meal_type, goal, calories_left, protein_left } = req.body;
 
-    const groqRes = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model:      'llama-3.1-8b-instant',   // ← fixed model name
-        max_tokens: 600,
-        messages: [
-          {
-            role:    'system',
-            content: `You are a fitness nutrition expert. Suggest meals in JSON format only.
+    const groqResult = await fetchGroq({
+      model:      'llama-3.1-8b-instant',
+      max_tokens: 600,
+      messages: [
+        {
+          role:    'system',
+          content: `You are a fitness nutrition expert. Suggest meals in JSON format only.
 Always respond with this exact structure and nothing else — no extra text, no markdown:
 {
   "suggestions": [
@@ -72,29 +96,25 @@ Always respond with this exact structure and nothing else — no extra text, no 
     }
   ]
 }`,
-          },
-          {
-            role:    'user',
-            content: `Suggest 3 healthy ${meal_type} options.
+        },
+        {
+          role:    'user',
+          content: `Suggest 3 healthy ${meal_type} options.
 User goal: ${goal || 'General Fitness'}
 Calories remaining today: ${calories_left || 500} kcal
 Protein remaining today: ${protein_left || 30}g
-Make suggestions fit within these remaining targets.
 Respond with JSON only — no extra text.`,
-          },
-        ],
-      }),
-    });
+        },
+      ],
+    }, process.env.GROQ_API_KEY);
 
-    const groqData = await groqRes.json();
-
-    if (!groqRes.ok) {
-      console.error('Groq error:', JSON.stringify(groqData));
-      return res.status(500).json({ error: 'AI service error', detail: groqData });
+    if (!groqResult.ok) {
+      console.error('Groq error:', JSON.stringify(groqResult.data));
+      return res.status(500).json({ error: 'AI service error', detail: groqResult.data });
     }
 
-    const content = groqData.choices?.[0]?.message?.content || '';
-    console.log('Groq response:', content); // ← debug log
+    const content = groqResult.data.choices?.[0]?.message?.content || '';
+    console.log('Groq response:', content);
 
     let suggestions = [];
     try {
@@ -125,6 +145,7 @@ Respond with JSON only — no extra text.`,
 
   } catch (err) {
     console.error('AI suggest error:', err.message);
+    console.error('AI suggest stack:', err.stack);
     res.status(500).json({ error: 'Server error', detail: err.message });
   }
 });

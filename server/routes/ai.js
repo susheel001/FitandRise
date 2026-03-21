@@ -166,7 +166,8 @@ router.post('/scan-food', auth, async (req, res) => {
     console.log('Scanning food image, size:', image.length);
 
     const result = await fetchGroq({
-      model:      'llama-3.2-11b-vision-preview',   // ← fixed model
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+   // ← fixed model
       max_tokens: 400,
       messages: [
         {

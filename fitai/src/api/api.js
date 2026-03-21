@@ -6,7 +6,18 @@ const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 // ── GET SUPABASE JWT TOKEN ─────────────────────────────────────
 const getToken = async () => {
   const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token || null;
+  if (session?.access_token) return session.access_token;
+
+  // Try refresh if session expired
+  const { data: { session: refreshed }, error } = await supabase.auth.refreshSession();
+  if (refreshed?.access_token) return refreshed.access_token;
+
+  // Force re-login if refresh failed
+  if (error) {
+    await supabase.auth.signOut();
+    window.location.href = '/login';
+  }
+  return null;
 };
 
 // ── HEADERS ────────────────────────────────────────────────────
@@ -24,7 +35,7 @@ const handle = async (res) => {
   const data = await res.json();
   if (!res.ok) {
     const err = new Error(data.message || data.error || 'Request failed');
-    err.data = data; // ← attach full backend response
+    err.data = data;
     throw err;
   }
   return data;

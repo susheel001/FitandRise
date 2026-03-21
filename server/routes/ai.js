@@ -4,7 +4,7 @@ const pool   = require('../db');
 const auth   = require('../middleware/auth');
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const FREE_LIMIT   = 6; // requests per day for free users
+const FREE_LIMIT   = 6;
 
 // ── CHECK & UPDATE request count ──────────────────────────────
 async function checkLimit(userId) {
@@ -14,11 +14,10 @@ async function checkLimit(userId) {
   );
   if (!rows.length) throw new Error('User not found');
 
-  const user    = rows[0];
-  const today   = new Date().toISOString().split('T')[0];
+  const user     = rows[0];
+  const today    = new Date().toISOString().split('T')[0];
   const lastDate = user.last_request_date?.toISOString?.().split('T')[0] || today;
 
-  // Reset count if it's a new day
   if (lastDate !== today) {
     await pool.query(
       'UPDATE users SET ai_requests_count = 0, last_request_date = $1 WHERE id = $2',
@@ -35,34 +34,32 @@ router.post('/suggest', auth, async (req, res) => {
   try {
     const user = await checkLimit(req.user.id);
 
-    // Block free users who hit the limit
     if (!user.is_premium && user.ai_requests_count >= FREE_LIMIT) {
       return res.status(403).json({
-        error: 'limit_reached',
-        message: `You've used all ${FREE_LIMIT} free AI suggestions for today. Upgrade to Premium for unlimited access!`,
-        is_premium: false,
+        error:         'limit_reached',
+        message:       `You've used all ${FREE_LIMIT} free AI suggestions for today. Upgrade to Premium for unlimited access!`,
+        is_premium:    false,
         requests_used: user.ai_requests_count,
-        limit: FREE_LIMIT,
+        limit:         FREE_LIMIT,
       });
     }
 
     const { meal_type, goal, calories_left, protein_left } = req.body;
 
-    // Call Groq API
     const groqRes = await fetch(GROQ_API_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type':  'application/json',
         'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'llama3-8b-8192',
-        max_tokens: 500,
+        model:      'llama-3.1-8b-instant',   // ← fixed model name
+        max_tokens: 600,
         messages: [
           {
-            role: 'system',
+            role:    'system',
             content: `You are a fitness nutrition expert. Suggest meals in JSON format only.
-Always respond with this exact structure, no extra text:
+Always respond with this exact structure and nothing else — no extra text, no markdown:
 {
   "suggestions": [
     {
@@ -77,12 +74,13 @@ Always respond with this exact structure, no extra text:
 }`,
           },
           {
-            role: 'user',
+            role:    'user',
             content: `Suggest 3 healthy ${meal_type} options.
 User goal: ${goal || 'General Fitness'}
 Calories remaining today: ${calories_left || 500} kcal
 Protein remaining today: ${protein_left || 30}g
-Make suggestions fit within these remaining targets.`,
+Make suggestions fit within these remaining targets.
+Respond with JSON only — no extra text.`,
           },
         ],
       }),
@@ -90,20 +88,23 @@ Make suggestions fit within these remaining targets.`,
 
     const groqData = await groqRes.json();
 
-    if (!groqRes.ok)
+    if (!groqRes.ok) {
+      console.error('Groq error:', JSON.stringify(groqData));
       return res.status(500).json({ error: 'AI service error', detail: groqData });
+    }
 
-    // Parse AI response
     const content = groqData.choices?.[0]?.message?.content || '';
+    console.log('Groq response:', content); // ← debug log
+
     let suggestions = [];
     try {
       const clean = content.replace(/```json|```/g, '').trim();
       suggestions = JSON.parse(clean).suggestions || [];
-    } catch {
-      return res.status(500).json({ error: 'Failed to parse AI response' });
+    } catch (parseErr) {
+      console.error('Parse error:', parseErr.message, 'Content:', content);
+      return res.status(500).json({ error: 'Failed to parse AI response', raw: content });
     }
 
-    // Increment request count
     await pool.query(
       `UPDATE users SET
         ai_requests_count = ai_requests_count + 1,
@@ -116,15 +117,15 @@ Make suggestions fit within these remaining targets.`,
 
     res.json({
       suggestions,
-      is_premium: user.is_premium,
+      is_premium:    user.is_premium,
       requests_used: newCount,
-      limit: FREE_LIMIT,
+      limit:         FREE_LIMIT,
       requests_left: user.is_premium ? 'unlimited' : FREE_LIMIT - newCount,
     });
 
   } catch (err) {
     console.error('AI suggest error:', err.message);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', detail: err.message });
   }
 });
 

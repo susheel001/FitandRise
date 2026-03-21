@@ -28,8 +28,8 @@ app.options('*', cors());
 
 // ── SECURITY & MIDDLEWARE ─────────────────────────────────────
 app.use(helmet());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));              // ← updated
+app.use(express.urlencoded({ limit: '10mb', extended: true })); // ← updated
 
 // ── RATE LIMITING ─────────────────────────────────────────────
 app.use('/api/', rateLimit({
@@ -55,7 +55,7 @@ app.use('/api/profile',  require('./routes/profile'));
 app.use('/api/stats',    require('./routes/stats'));
 app.use('/api/meals',    require('./routes/meals'));
 app.use('/api/workouts', require('./routes/workouts'));
-app.use('/api/ai',       require('./routes/ai'));       // ← fixed position
+app.use('/api/ai',       require('./routes/ai'));
 
 // ── 404 HANDLER ──────────────────────────────────────────────
 app.use((req, res) => {

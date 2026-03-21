@@ -1,26 +1,139 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/useApp';
 import { supabase } from '../lib/supabase';
+import { useNotifications } from '../hooks/useNotifications';
 import Icon from '@mdi/react';
 import {
   mdiViewDashboard, mdiDumbbell, mdiFood, mdiChartBar,
   mdiCalculator, mdiAccount, mdiCog, mdiLogout,
   mdiWeatherNight, mdiWeatherSunny, mdiMenu, mdiClose,
+  mdiBell, mdiBellOutline, mdiTrashCan, mdiWater,
+  mdiFoodOutline, mdiDumbbellOff, mdiInformation,
 } from '@mdi/js';
 
 const navLinks = [
   { label: 'Dashboard',   to: '/dashboard', icon: mdiViewDashboard },
-  { label: 'Workouts',    to: '/workouts',  icon: mdiDumbbell },
-  { label: 'Nutrition',   to: '/nutrition', icon: mdiFood },
-  { label: 'Progress',    to: '/progress',  icon: mdiChartBar },
-  { label: 'BMI & Tools', to: '/tools',     icon: mdiCalculator },
+  { label: 'Workouts',    to: '/workouts',  icon: mdiDumbbell      },
+  { label: 'Nutrition',   to: '/nutrition', icon: mdiFood          },
+  { label: 'Progress',    to: '/progress',  icon: mdiChartBar      },
+  { label: 'BMI & Tools', to: '/tools',     icon: mdiCalculator    },
 ];
 
 const bottomLinks = [
   { label: 'Profile',  to: '/profile',  icon: mdiAccount },
-  { label: 'Settings', to: '/settings', icon: mdiCog },
+  { label: 'Settings', to: '/settings', icon: mdiCog     },
 ];
+
+const typeColors = {
+  meal:    '#f97316',
+  water:   '#3b82f6',
+  workout: '#22c55e',
+  info:    '#a855f7',
+};
+
+const typeIcons = {
+  meal:    mdiFood,
+  water:   mdiWater,
+  workout: mdiDumbbell,
+  info:    mdiInformation,
+};
+
+// ── Notification Bell ─────────────────────────────────────────
+function NotificationBell({ dm }) {
+  const { notifications, unreadCount, permission, requestPermission, markAllRead, clearAll } = useNotifications();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleOpen = () => {
+    setOpen(p => !p);
+    if (!open) markAllRead();
+  };
+
+  const formatTime = (iso) => {
+    const d = new Date(iso);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button onClick={handleOpen}
+        className={`relative w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:scale-110 ${dm ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'}`}>
+        <Icon path={unreadCount > 0 ? mdiBell : mdiBellOutline} size={0.75} color={dm ? '#9ca3af' : '#6b7280'} />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs font-black rounded-full flex items-center justify-center">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className={`absolute right-0 top-11 w-80 rounded-2xl shadow-2xl z-50 overflow-hidden ${dm ? 'bg-gray-900 border border-gray-700' : 'bg-white border border-gray-100'}`}>
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: dm ? '#374151' : '#f3f4f6' }}>
+            <p className={`font-black text-sm ${dm ? 'text-white' : 'text-gray-800'}`}>Notifications</p>
+            <div className="flex items-center gap-2">
+              {permission !== 'granted' && (
+                <button onClick={requestPermission}
+                  className="text-xs px-2 py-1 rounded-lg font-bold text-white"
+                  style={{ background: 'linear-gradient(135deg,#a855f7,#3b82f6)' }}>
+                  Enable
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button onClick={clearAll} className="text-gray-400 hover:text-red-400 transition">
+                  <Icon path={mdiTrashCan} size={0.65} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Permission prompt */}
+          {permission === 'default' && (
+            <div className="px-4 py-3" style={{ background: dm ? 'rgba(168,85,247,0.08)' : 'rgba(168,85,247,0.04)' }}>
+              <p className={`text-xs mb-2 ${dm ? 'text-gray-400' : 'text-gray-500'}`}>
+                Enable notifications to get meal, water and workout reminders!
+              </p>
+              <button onClick={requestPermission}
+                className="px-4 py-2 rounded-xl text-xs font-black text-white w-full"
+                style={{ background: 'linear-gradient(135deg,#a855f7,#3b82f6)' }}>
+                Enable Notifications
+              </button>
+            </div>
+          )}
+
+          {/* Notification list */}
+          <div className="max-h-72 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="flex flex-col items-center py-8 gap-2">
+                <Icon path={mdiBellOutline} size={1.5} color={dm ? '#4b5563' : '#d1d5db'} />
+                <p className={`text-sm ${dm ? 'text-gray-500' : 'text-gray-400'}`}>No notifications yet</p>
+              </div>
+            ) : notifications.map(n => (
+              <div key={n.id} className={`flex items-start gap-3 px-4 py-3 border-b transition-all ${dm ? 'border-gray-800 hover:bg-gray-800' : 'border-gray-50 hover:bg-gray-50'}`}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: `${typeColors[n.type] || '#a855f7'}22` }}>
+                  <Icon path={typeIcons[n.type] || mdiInformation} size={0.65} color={typeColors[n.type] || '#a855f7'} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`font-bold text-xs ${dm ? 'text-white' : 'text-gray-800'}`}>{n.title}</p>
+                  <p className={`text-xs mt-0.5 ${dm ? 'text-gray-400' : 'text-gray-500'}`}>{n.body}</p>
+                  <p className="text-xs text-gray-400 mt-1">{formatTime(n.time)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function SidebarContent({ onClose = () => {} }) {
   const { state, toggleDarkMode } = useApp();
@@ -59,8 +172,7 @@ function SidebarContent({ onClose = () => {} }) {
       {/* Nav links */}
       <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
         {navLinks.map(({ label, to, icon }) => (
-          <NavLink key={label} to={to}
-            onClick={onClose} // ✅ closes mobile drawer on navigate
+          <NavLink key={label} to={to} onClick={onClose}
             className={({ isActive }) => linkClass(isActive)}>
             <Icon path={icon} size={0.8} />
             {label}
@@ -70,8 +182,7 @@ function SidebarContent({ onClose = () => {} }) {
         <div className={`my-3 border-t ${dm ? 'border-gray-800' : 'border-gray-100'}`} />
 
         {bottomLinks.map(({ label, to, icon }) => (
-          <NavLink key={label} to={to}
-            onClick={onClose} // ✅ closes mobile drawer on navigate
+          <NavLink key={label} to={to} onClick={onClose}
             className={({ isActive }) => linkClass(isActive)}>
             <Icon path={icon} size={0.8} />
             {label}
@@ -81,8 +192,6 @@ function SidebarContent({ onClose = () => {} }) {
 
       {/* Bottom */}
       <div className={`px-4 pb-4 pt-3 border-t space-y-2 ${dm ? 'border-gray-800' : 'border-gray-100'}`}>
-
-        {/* Dark mode toggle */}
         <button onClick={toggleDarkMode}
           className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all ${
             dm ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
@@ -134,9 +243,12 @@ export default function Sidebar() {
           <img src="/fitandrise.jpeg" alt="FitandRise" className="w-7 h-7 rounded-lg object-cover" />
           <span className={`font-black ${dm ? 'text-white' : 'text-gray-800'}`}>FitandRise</span>
         </div>
-        <button onClick={() => setOpen(true)} className={dm ? 'text-white' : 'text-gray-700'}>
-          <Icon path={mdiMenu} size={1} />
-        </button>
+        <div className="flex items-center gap-2">
+          <NotificationBell dm={dm} />
+          <button onClick={() => setOpen(true)} className={dm ? 'text-white' : 'text-gray-700'}>
+            <Icon path={mdiMenu} size={1} />
+          </button>
+        </div>
       </div>
 
       {/* Mobile drawer */}

@@ -65,18 +65,19 @@ export default function Landing() {
     { icon: mdiRobot,        title: 'AI Meal Suggestions', color: '#a855f7', desc: 'Get 3 personalized meal suggestions based on your remaining calories and goals.',  badge: 'NEW' },
     { icon: mdiCamera,       title: 'AI Food Scanner',     color: '#06b6d4', desc: 'Point camera at any food — AI calculates all nutrition values instantly.',          badge: 'NEW' },
     { icon: mdiFire,         title: 'Calorie Tracking',    color: '#f97316', desc: 'Log every meal with detailed macros — calories, protein, carbs and fat.'                    },
-    { icon: mdiDumbbell,     title: 'Workout Logger',      color: '#3b82f6', desc: 'Track 100+ exercises by muscle group. Mark sets done and build consistency.'               },
+    { icon: mdiDumbbell,     title: 'Workout Logger',      color: '#3b82f6', desc: 'Track exercises by muscle group. Mark sets done and build consistency.'                     },
     { icon: mdiChartBar,     title: 'Weekly Progress',     color: '#22c55e', desc: 'Beautiful charts showing your calorie and protein trends over 7 days.'                     },
     { icon: mdiWater,        title: 'Water Tracker',       color: '#0ea5e9', desc: 'Log glasses of water and never miss your daily hydration goal.'                            },
     { icon: mdiTarget,       title: 'Personal Goals',      color: '#ec4899', desc: 'Set custom targets for calories, protein, water and weekly workouts.'                      },
-    { icon: mdiScaleBalance, title: 'BMI & Tools',         color: '#f59e0b', desc: 'Calculate BMI and estimate calories burned from 10+ activities.'                          },
+    { icon: mdiScaleBalance, title: 'BMI & Tools',         color: '#f59e0b', desc: 'Calculate BMI and estimate calories burned from activities.'                               },
   ];
 
+  // ✅ Removed 100+ Exercises, replaced with Active Users
   const stats = [
-    { value: 8,  suffix: '',  label: 'Core Features'   },
-    { value: 10, suffix: '+', label: 'Muscle Groups'   },
-    { value: 100, suffix: '+', label: 'Exercises'      },
-    { value: 2,  suffix: '$', label: 'Premium/month'   },
+    { value: 8,  suffix: '',  label: 'Core Features' },
+    { value: 10, suffix: '+', label: 'Muscle Groups' },
+    { value: 20, suffix: '+', label: 'Active Users'  },
+    { value: 2,  suffix: '$', label: 'Premium/month' },
   ];
 
   const steps = [
@@ -162,7 +163,6 @@ export default function Landing() {
             <p className="text-gray-500 text-lg max-w-lg mb-8 leading-relaxed">
               Log meals with AI, scan food with your camera, track workouts and visualize your weekly progress — all completely free.
             </p>
-
             <div className="flex flex-wrap gap-2 mb-8">
               {[
                 { label: 'AI Meal Suggestions', bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-100' },
@@ -175,7 +175,6 @@ export default function Landing() {
                 </span>
               ))}
             </div>
-
             <div className="flex flex-col sm:flex-row gap-3">
               <Link to="/signup"
                 className="px-8 py-4 rounded-2xl font-black text-white text-base transition-all hover:opacity-90 hover:scale-105 text-center shadow-lg flex items-center justify-center gap-2"
@@ -220,7 +219,6 @@ export default function Landing() {
                 </div>
               </div>
             </div>
-            {/* ✅ Fixed badge */}
             <div className="absolute -top-3 -right-3 bg-white rounded-2xl px-4 py-3 shadow-lg border border-gray-100">
               <p className="text-2xl font-black text-blue-500">Free</p>
               <p className="text-gray-400 text-xs font-semibold">+ Premium</p>
@@ -258,9 +256,7 @@ export default function Landing() {
             <h2 className="text-3xl sm:text-4xl font-black mb-4 text-gray-900">AI that works for your fitness</h2>
             <p className="text-gray-400 max-w-xl mx-auto">Two powerful AI features that make logging food effortless.</p>
           </div>
-
           <div className="grid lg:grid-cols-2 gap-8">
-            {/* AI Meal Suggestions */}
             <div className="rounded-3xl overflow-hidden shadow-lg border border-gray-100 hover:-translate-y-1 transition-all duration-300 group">
               <div className="p-8 bg-gradient-to-br from-purple-50 to-blue-50">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
@@ -289,7 +285,6 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Food Scanner */}
             <div className="rounded-3xl overflow-hidden shadow-lg border border-gray-100 hover:-translate-y-1 transition-all duration-300 group">
               <div className="p-8 bg-gradient-to-br from-cyan-50 to-blue-50">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
@@ -331,7 +326,6 @@ export default function Landing() {
             <h2 className="text-3xl sm:text-4xl font-black mb-4 text-gray-900">See exactly what you're getting</h2>
             <p className="text-gray-400 max-w-xl mx-auto">No mockups. Click any image to view it fullscreen.</p>
           </div>
-
           <div className="rounded-2xl overflow-hidden mb-4 shadow-xl cursor-pointer group border border-gray-200"
             onClick={() => setLightbox('/fitandrise1.png')}>
             <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-white">
@@ -347,7 +341,6 @@ export default function Landing() {
               </div>
             </div>
           </div>
-
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
             {[
               { src: '/fitandrise2.png', label: 'Workouts',     accent: '#ef4444' },
@@ -409,9 +402,9 @@ export default function Landing() {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {[
-              { img: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&auto=format&fit=crop&q=80', title: 'Track Every Workout',  desc: 'Log 100+ exercises across 10+ muscle groups. Build consistency and never miss a session.',              color: '#3b82f6', tag: 'Workout Tracker', icon: mdiDumbbell },
-              { img: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&auto=format&fit=crop&q=80', title: 'Fuel Your Body Right',  desc: 'Use AI to scan food or get meal suggestions tailored to your exact calorie and protein goals.',          color: '#22c55e', tag: 'AI Nutrition',    icon: mdiRobot    },
-              { img: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=600&auto=format&fit=crop&q=80', title: 'See Your Progress',       desc: 'Beautiful weekly charts show your calorie and protein trends so you can celebrate every win.',           color: '#f97316', tag: 'Progress Charts', icon: mdiChartBar },
+              { img: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&auto=format&fit=crop&q=80', title: 'Track Every Workout',  desc: 'Log exercises across multiple muscle groups. Build consistency and never miss a session.',             color: '#3b82f6', tag: 'Workout Tracker', icon: mdiDumbbell },
+              { img: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&auto=format&fit=crop&q=80', title: 'Fuel Your Body Right',  desc: 'Use AI to scan food or get meal suggestions tailored to your exact calorie and protein goals.',         color: '#22c55e', tag: 'AI Nutrition',    icon: mdiRobot    },
+              { img: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=600&auto=format&fit=crop&q=80', title: 'See Your Progress',       desc: 'Beautiful weekly charts show your calorie and protein trends so you can celebrate every win.',          color: '#f97316', tag: 'Progress Charts', icon: mdiChartBar },
             ].map((a, i) => (
               <div key={i} className="rounded-3xl overflow-hidden shadow-lg border border-gray-100 group hover:-translate-y-1 transition-all duration-300">
                 <div className="relative h-52 overflow-hidden">
@@ -545,7 +538,7 @@ export default function Landing() {
           <p className="text-gray-300 text-xs">© 2026 FitandRise. All rights reserved.</p>
           <div className="flex gap-6">
             <Link to="/login"  className="text-gray-400 hover:text-gray-900 text-xs transition-colors">Log In</Link>
-            <Link to="/signup" className="text-gray-400 hover:text-gray-900 text-xs transition-colors">Sign Up</Link>
+            <Link to="/signup" className="text-gray-400 hover:text-gray3900 text-xs transition-colors">Sign Up</Link>
           </div>
         </div>
       </footer>

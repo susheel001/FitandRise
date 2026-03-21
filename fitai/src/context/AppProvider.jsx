@@ -17,7 +17,14 @@ export default function AppProvider({ children }) {
   const [state, setState] = useState(() => {
     try {
       const saved = localStorage.getItem('befit-ui');
-      return saved ? { ...defaultState, ...JSON.parse(saved) } : defaultState;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...defaultState,
+          darkMode: parsed.darkMode || false, // ← only restore darkMode, nothing else
+        };
+      }
+      return defaultState;
     } catch { return defaultState; }
   });
 
@@ -32,7 +39,6 @@ export default function AppProvider({ children }) {
   // ── Load data from backend ────────────────────────────────────
   useEffect(() => {
     async function load() {
-      // ✅ Always get fresh session before making API calls
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
@@ -49,24 +55,31 @@ export default function AppProvider({ children }) {
           loading: false,
           profile: profileData?.profile
             ? {
-                name:   profileData.profile.name   || prev.profile.name,
-                age:    profileData.profile.age    || prev.profile.age,
-                weight: profileData.profile.weight || prev.profile.weight,
-                height: profileData.profile.height || prev.profile.height,
-                goal:   profileData.profile.goal   || prev.profile.goal,
-                level:  profileData.profile.level  || prev.profile.level,
-                gender: profileData.profile.gender || prev.profile.gender,
+                name:   profileData.profile.name              || prev.profile.name,
+                age:    parseInt(profileData.profile.age)     || prev.profile.age,
+                weight: parseFloat(profileData.profile.weight)|| prev.profile.weight,
+                height: parseFloat(profileData.profile.height)|| prev.profile.height,
+                goal:   profileData.profile.goal              || prev.profile.goal,
+                level:  profileData.profile.level             || prev.profile.level,
+                gender: profileData.profile.gender            || prev.profile.gender,
               }
             : prev.profile,
           goals: profileData?.goals
             ? {
-                calories: profileData.goals.calories || 2000,
-                protein:  profileData.goals.protein  || 120,
-                water:    profileData.goals.water    || 8,
-                workouts: profileData.goals.workouts || 5,
+                calories: parseInt(profileData.goals.calories) || 2000,
+                protein:  parseInt(profileData.goals.protein)  || 120,
+                water:    parseInt(profileData.goals.water)    || 8,
+                workouts: parseInt(profileData.goals.workouts) || 5,
               }
             : prev.goals,
-          stats:    statsData    ? { ...prev.stats, calories: statsData.calories_consumed || 0, protein: statsData.protein_consumed || 0, water: statsData.water_consumed || 0 } : prev.stats,
+          stats: statsData
+            ? {
+                ...prev.stats,
+                calories: parseInt(statsData.calories_consumed) || 0,
+                protein:  parseInt(statsData.protein_consumed)  || 0,
+                water:    parseInt(statsData.water_consumed)    || 0,
+              }
+            : prev.stats,
           mealLog:  mealsData    || prev.mealLog,
           workouts: workoutsData || prev.workouts,
         }));
@@ -75,9 +88,6 @@ export default function AppProvider({ children }) {
       }
     }
 
-    // ✅ INITIAL_SESSION fires when Supabase restores session from localStorage on page load
-    // ✅ SIGNED_IN fires when user logs in fresh
-    // Both guarantee the token is ready before load() is called
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
         if (session) load();
@@ -116,7 +126,14 @@ export default function AppProvider({ children }) {
 
   const addMeal = useCallback(async (mealType, food) => {
     const newLog = { ...state.mealLog, [mealType]: [...(state.mealLog[mealType] || []), food] };
-    update({ mealLog: newLog, stats: { ...state.stats, calories: state.stats.calories + food.calories, protein: state.stats.protein + food.protein } });
+    update({
+      mealLog: newLog,
+      stats: {
+        ...state.stats,
+        calories: (parseInt(state.stats.calories) || 0) + (parseInt(food.calories) || 0),
+        protein:  (parseInt(state.stats.protein)  || 0) + (parseInt(food.protein)  || 0),
+      },
+    });
     try {
       await mealsAPI.add({
         meal_type: mealType,
@@ -133,7 +150,14 @@ export default function AppProvider({ children }) {
   const removeMeal = useCallback(async (mealType, idx) => {
     const food = state.mealLog[mealType][idx];
     const newLog = { ...state.mealLog, [mealType]: state.mealLog[mealType].filter((_, i) => i !== idx) };
-    update({ mealLog: newLog, stats: { ...state.stats, calories: Math.max(0, state.stats.calories - food.calories), protein: Math.max(0, state.stats.protein - food.protein) } });
+    update({
+      mealLog: newLog,
+      stats: {
+        ...state.stats,
+        calories: Math.max(0, (parseInt(state.stats.calories) || 0) - (parseInt(food.calories) || 0)),
+        protein:  Math.max(0, (parseInt(state.stats.protein)  || 0) - (parseInt(food.protein)  || 0)),
+      },
+    });
     try { if (food.id) await mealsAPI.remove(food.id); } catch {}
   }, [state.mealLog, state.stats]);
 

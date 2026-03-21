@@ -9,15 +9,16 @@ import {
   mdiCalculator, mdiAccount, mdiCog, mdiLogout,
   mdiWeatherNight, mdiWeatherSunny, mdiMenu, mdiClose,
   mdiBell, mdiBellOutline, mdiTrashCan, mdiWater,
-  mdiFoodOutline, mdiDumbbellOff, mdiInformation,
+  mdiInformation, mdiCameraOutline,
 } from '@mdi/js';
 
 const navLinks = [
-  { label: 'Dashboard',   to: '/dashboard', icon: mdiViewDashboard },
-  { label: 'Workouts',    to: '/workouts',  icon: mdiDumbbell      },
-  { label: 'Nutrition',   to: '/nutrition', icon: mdiFood          },
-  { label: 'Progress',    to: '/progress',  icon: mdiChartBar      },
-  { label: 'BMI & Tools', to: '/tools',     icon: mdiCalculator    },
+  { label: 'Dashboard',    to: '/dashboard', icon: mdiViewDashboard },
+  { label: 'Workouts',     to: '/workouts',  icon: mdiDumbbell      },
+  { label: 'Nutrition',    to: '/nutrition', icon: mdiFood          },
+  { label: 'Food Scanner', to: '/scanner',   icon: mdiCameraOutline }, // ← new
+  { label: 'Progress',     to: '/progress',  icon: mdiChartBar      },
+  { label: 'BMI & Tools',  to: '/tools',     icon: mdiCalculator    },
 ];
 
 const bottomLinks = [

@@ -3,10 +3,9 @@ const router = require('express').Router();
 const pool   = require('../db');
 const auth   = require('../middleware/auth');
 
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const FREE_LIMIT   = 6;
+const FREE_LIMIT = 6;
 
-// ── Built-in HTTPS fetch (no external packages needed) ────────
+// ── Built-in HTTPS fetch ──────────────────────────────────────
 function fetchGroq(body, apiKey) {
   return new Promise((resolve, reject) => {
     const bodyStr = JSON.stringify(body);
@@ -24,7 +23,11 @@ function fetchGroq(body, apiKey) {
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
         try {
-          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, data: JSON.parse(data) });
+          resolve({
+            ok:     res.statusCode >= 200 && res.statusCode < 300,
+            status: res.statusCode,
+            data:   JSON.parse(data),
+          });
         } catch (e) {
           reject(new Error('Failed to parse Groq response: ' + data));
         }
@@ -146,6 +149,72 @@ Respond with JSON only — no extra text.`,
   } catch (err) {
     console.error('AI suggest error:', err.message);
     console.error('AI suggest stack:', err.stack);
+    res.status(500).json({ error: 'Server error', detail: err.message });
+  }
+});
+
+// ── FOOD SCAN (Vision) ────────────────────────────────────────
+router.post('/scan-food', auth, async (req, res) => {
+  try {
+    const { image } = req.body;
+    if (!image) return res.status(400).json({ error: 'No image provided' });
+
+    // Check image size — max 4MB base64
+    if (image.length > 5 * 1024 * 1024) {
+      return res.status(400).json({ error: 'Image too large. Please try again.' });
+    }
+
+    console.log('Scanning food image, size:', image.length);
+
+    const result = await fetchGroq({
+      model:      'llama-4-scout-17b-16e-instruct',
+      max_tokens: 400,
+      messages: [
+        {
+          role:    'user',
+          content: [
+            {
+              type:      'image_url',
+              image_url: { url: `data:image/jpeg;base64,${image}` },
+            },
+            {
+              type: 'text',
+              text: `Analyze this food image and return nutrition info as JSON only.
+No extra text, no markdown. Use this exact structure:
+{
+  "name": "Food Name",
+  "portion": "1 serving (approx 100g)",
+  "calories": 250,
+  "protein": 20,
+  "carbs": 30,
+  "fat": 8,
+  "note": "Estimated values based on visual analysis"
+}`,
+            },
+          ],
+        },
+      ],
+    }, process.env.GROQ_API_KEY);
+
+    if (!result.ok) {
+      console.error('Groq vision error:', JSON.stringify(result.data));
+      return res.status(500).json({ error: 'AI vision service error', detail: result.data });
+    }
+
+    const content = result.data.choices?.[0]?.message?.content || '';
+    console.log('Vision response:', content);
+
+    try {
+      const clean = content.replace(/```json|```/g, '').trim();
+      const food  = JSON.parse(clean);
+      res.json(food);
+    } catch {
+      res.status(500).json({ error: 'Failed to parse food data', raw: content });
+    }
+
+  } catch (err) {
+    console.error('Scan food error:', err.message);
+    console.error('Scan food stack:', err.stack);
     res.status(500).json({ error: 'Server error', detail: err.message });
   }
 });

@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AppProvider     from './context/AppProvider';
 import ProtectedRoute  from './components/ProtectedRoute';
-import PublicRoute     from './components/PublicRoute';     {/* ← new */}
+import PublicRoute     from './components/PublicRoute';
 import DashboardLayout from './layout/DashboardLayout';
 import Landing         from './pages/Landing';
 import Dashboard       from './pages/Dashboard';
@@ -15,6 +15,7 @@ import Login           from './pages/Login';
 import Signup          from './pages/Signup';
 import ForgotPassword  from './pages/ForgotPassword';
 import ResetPassword   from './pages/ResetPassword';
+import FoodScanner     from './pages/FoodScanner';        {/* ← new */}
 import NotFound        from './pages/NotFound';
 
 const Wrap = ({ page }) => (
@@ -34,12 +35,13 @@ export default function App() {
           <Route path="/login"           element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/signup"          element={<PublicRoute><Signup /></PublicRoute>} />
           <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
-          <Route path="/reset-password"  element={<ResetPassword />} /> {/* No PublicRoute — needs session from email link */}
+          <Route path="/reset-password"  element={<ResetPassword />} />
 
           {/* Protected routes */}
           <Route path="/dashboard" element={<Wrap page={<Dashboard />} />} />
           <Route path="/workouts"  element={<Wrap page={<Workouts />} />} />
           <Route path="/nutrition" element={<Wrap page={<Nutrition />} />} />
+          <Route path="/scanner"   element={<Wrap page={<FoodScanner />} />} />  {/* ← new */}
           <Route path="/progress"  element={<Wrap page={<Progress />} />} />
           <Route path="/tools"     element={<Wrap page={<BMITools />} />} />
           <Route path="/profile"   element={<Wrap page={<Profile />} />} />

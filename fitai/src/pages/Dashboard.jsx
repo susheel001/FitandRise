@@ -53,16 +53,23 @@ export default function Dashboard() {
   const textMuted= dm ? 'text-gray-400' : 'text-gray-500';
   const card     = `rounded-2xl border p-4 sm:p-5 ${dm ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-sm'}`;
 
-  // ── Fetch real weekly data from API ────────────────────────
   useEffect(() => {
     statsAPI.weekly().then(data => {
       if (data?.length) {
         setWeekly(
-          [...data].reverse().map(d => ({
-            day:      new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' }),
-            calories: d.calories_consumed || 0,
-            protein:  d.protein_consumed  || 0,
-          }))
+          [...data].reverse().map(d => {
+            const raw = d.date ?? '';
+            const normalized = raw.includes('T') ? raw : raw.replace(' ', 'T');
+            const parsed = new Date(normalized);
+            const day = isNaN(parsed)
+              ? raw.slice(5, 10)
+              : parsed.toLocaleDateString('en-US', { weekday: 'short' });
+            return {
+              day,
+              calories: d.calories_consumed || 0,
+              protein:  d.protein_consumed  || 0,
+            };
+          })
         );
       }
     }).catch(() => {});
@@ -125,7 +132,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Weekly chart — real data */}
+      {/* Weekly chart */}
       <div className={card}>
         <p className={`font-bold mb-3 text-sm sm:text-base ${textMain}`}>This Week</p>
         <div className="flex gap-3 mb-3 text-xs">

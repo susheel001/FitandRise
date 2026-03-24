@@ -72,12 +72,10 @@ export default function Landing() {
     { icon: mdiScaleBalance, title: 'BMI & Tools',         color: '#f59e0b', desc: 'Calculate BMI and estimate calories burned from activities.'                               },
   ];
 
-  // ✅ Removed 100+ Exercises, replaced with Active Users
   const stats = [
     { value: 8,  suffix: '',  label: 'Core Features' },
     { value: 10, suffix: '+', label: 'Muscle Groups' },
-    { value: 20, suffix: '+', label: 'Active Users'  },
-    { value: 2,  suffix: '$', label: 'Premium/month' },
+    { value: 5,  suffix: '$', label: 'Premium/month' },
   ];
 
   const steps = [
@@ -233,7 +231,7 @@ export default function Landing() {
 
       {/* ── STATS BAR ── */}
       <section className="py-12 px-6 bg-gray-50 border-y border-gray-100">
-        <div className="max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-8">
+        <div className="max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-3 gap-8">
           {stats.map((s, i) => (
             <div key={i} className="text-center">
               <p className="text-4xl font-black mb-1"

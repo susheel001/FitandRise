@@ -15,12 +15,23 @@ export default function Progress() {
     statsAPI.weekly().then(data => {
       if (data?.length) {
         setWeekly(
-          [...data].reverse().map(d => ({
-            day:      new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' }),
-            calories: d.calories_consumed || 0,
-            protein:  d.protein_consumed  || 0,
-            water:    d.water_consumed    || 0,
-          }))
+          [...data].reverse().map(d => {
+            // Normalize date string: replace space with T, strip extra time if already has T
+            const raw = d.date ?? '';
+            const normalized = raw.includes('T')
+              ? raw                          // already ISO format
+              : raw.replace(' ', 'T');       // "2026-03-24 00:00:00" → "2026-03-24T00:00:00"
+            const parsed = new Date(normalized);
+            const day = isNaN(parsed)
+              ? raw.slice(5, 10)             // fallback: show "MM-DD" from raw string
+              : parsed.toLocaleDateString('en-US', { weekday: 'short' });
+            return {
+              day,
+              calories: d.calories_consumed || 0,
+              protein:  d.protein_consumed  || 0,
+              water:    d.water_consumed    || 0,
+            };
+          })
         );
       }
     }).catch(() => {});
@@ -43,7 +54,6 @@ export default function Progress() {
     { icon: mdiWeightLifter, label: 'BMI Status',     value: bmiLabel,                 goal: `BMI: ${bmi}`,                 color: bmiColor,  bg: dm ? '#1e293b' : '#f8fafc' },
   ];
 
-  // Chart tab button style
   const tabClass = (key) =>
     `px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
       activeChart === key
